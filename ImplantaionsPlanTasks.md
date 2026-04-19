@@ -74,9 +74,9 @@ Seção 10 — Estrutura do Código
 ### O que fazer
 Criar `docker-compose.yml` com todos os serviços de infraestrutura necessários para rodar o projeto localmente.
 ### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+- [x] **[RED - Validação]** Validar a inexistência prévia e desenhar o serviço.
+- [x] **[GREEN - Infra]** `docker-compose` escrito com DB, Redis e RabbitMQ e passando no `docker-compose config`.
+- [x] **[REFACTOR - Ajustes]** Variáveis de senhas extraídas para `.env` como requerido pelas inegociáveis.
 #### Regras de Negócio (a serem validadas nos testes):
 - [x] `docker-compose.yml` na raiz com os seguintes serviços:
   - `postgres:16` na porta `5432`, banco `sincronizamei_dev`, usuário `app_user`
