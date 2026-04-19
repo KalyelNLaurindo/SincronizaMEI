@@ -25,14 +25,14 @@
 | E1 | Setup de Ambiente & Infraestrutura | 🔴 P0 | 6 tasks |
 | E2 | Banco de Dados & Migrations | 🔴 P0 | 7 tasks |
 | E3 | Backend — Core ERP (Java/Spring) | 🟠 P1 | 10 tasks |
-| E4 | Segurança & Compliance LGPD | 🟠 P1 | 5 tasks |
-| E5 | Mensageria & Workers Assíncronos | 🟡 P2 | 5 tasks |
-| E6 | Frontend React PWA | 🟡 P2 | 7 tasks |
-| E7 | Testes & Qualidade | 🟠 P1 | 6 tasks |
+| E4 | Fundação TDD & Qualidade | 🔴 P0 | 6 tasks |
+| E5 | Segurança & Compliance LGPD | 🟠 P1 | 5 tasks |
+| E6 | Mensageria & Workers Assíncronos | 🟡 P2 | 5 tasks |
+| E7 | Frontend React PWA | 🟡 P2 | 7 tasks |
 | E8 | CI/CD & Deploy Blue-Green | 🟡 P2 | 5 tasks |
 | E9 | Observabilidade & Alertas | 🟢 P3 | 4 tasks |
 
-**Total: 55 tasks**
+**Total: 82 tasks**
 
 ---
 
@@ -196,7 +196,6 @@ Criar módulos Terraform para provisionar a infraestrutura de staging com parida
 ---
 
 ---
-
 # 🔴 E2 — BANCO DE DADOS & MIGRATIONS
 
 ---
@@ -386,713 +385,13 @@ ADR-05, RNF-06
 ---
 
 ---
-
-# 🟠 E3 — BACKEND CORE ERP (JAVA/SPRING)
-
----
-
-## TASK-014 · Implementar IdempotencyInterceptor (Redis SET NX EX)
-
-**Épico:** E3 — Backend  
-**Prioridade:** 🔴 P0  
-**Estimativa:** 5h  
-**Pré-requisitos:** TASK-003, TASK-002
-
-### O que fazer
-Implementar o interceptor de idempotência que protege todos os endpoints POST/PUT de processamento duplicado.
-
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED – Testes]** Escrever os testes de integração do `IdempotencyInterceptor` simulando requisições duplicadas. O código deve falhar por falta da implementação.
-- [ ] **[GREEN – Lógica]** Implementar o HandlerInterceptor validando o `X-Idempotency-Key` (400), chave duplicada (409) e race conditions (`NX EX 86400`). Fazer os testes passarem perfeitamente.
-- [ ] **[REFACTOR – Clean Code]** Isolar as dependências usando POO, movendo o acesso ao Redis para uma camada de serviço abstrata injetada no Interceptor, em respeito aos Design Patterns.
-
-### Referência no README
-RF-02 (AC-02.1, AC-02.2, AC-02.3), ADR-03
+# 🔴 E3 — FUNDAÇÃO TDD & QUALIDADE (Shift-Left)
 
 ---
 
-## TASK-015 · Implementar bounded context Financeiro (entidades e repositórios)
+## TASK-014 · Configurar Testcontainers para testes de integração
 
-**Épico:** E3 — Backend  
-**Prioridade:** 🔴 P0  
-**Estimativa:** 6h  
-**Pré-requisitos:** TASK-007, TASK-014
-
-### O que fazer
-Criar as entidades JPA, repositórios e serviços do módulo financeiro respeitando o bounded context.
-
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED – Testes]** Criar o projeto de testes para transições de estado do enum `OrdemStatus`. Validar os relacionamentos de models sem o banco real estar pronto na View.
-- [ ] **[GREEN – Lógica MVC]** Mapear as Entidades da Camada Model (`Ordem`, `Lancamento`) em `com.sincronizamei.financeiro.domain`. Realizar as mutações por repositórios não-bitemporais limitados a NativeQuery.
-- [ ] **[REFACTOR – POO]** Aplicar polimorfismo nas transações da máquina de estados, evitar repetição de if/elses e isolar a camada de Eventos. Proibido acoplamento de outros domínios via ArchUnit.
-
-### Referência no README
-Apêndice B — Máquina de Estados, ADR-01, Restrição #3
-
----
-
-## TASK-016 · Implementar bounded context Estoque (entidades e repositórios)
-
-**Épico:** E3 — Backend  
-**Prioridade:** 🟠 P1  
-**Estimativa:** 5h  
-**Pré-requisitos:** TASK-007
-
-### O que fazer
-Criar as entidades, repositórios e serviços do módulo de estoque.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] Entidades em `com.sincronizamei.estoque.domain`: `Produto`, `MovimentacaoEstoque`
-- [ ] Capacidade para catálogo de 500k itens (índices corretos nas migrations)
-- [ ] Movimentação de estoque usa stored procedure para atomicidade
-- [ ] Listener de `OrdemCriadaEvent` do módulo financeiro atualiza estoque sem acesso direto ao repositório financeiro
-- [ ] Teste de integração: criar ordem → verificar baixa de estoque sem chamar nenhum método do módulo financeiro diretamente
-
-### Referência no README
-RNF-03, ADR-01
-
----
-
-## TASK-017 · Implementar FaturamentoController (endpoint POST /api/v1/faturamento/ordens)
-
-**Épico:** E3 — Backend  
-**Prioridade:** 🔴 P0  
-**Estimativa:** 5h  
-**Pré-requisitos:** TASK-015, TASK-014
-
-### O que fazer
-Implementar o endpoint de faturamento seguindo o protocolo de resiliência documentado no README.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] `POST /api/v1/faturamento/ordens` implementado
-- [ ] Response síncrono retorna `HTTP 202 Accepted` com `Location` header
-- [ ] Body de resposta contém: `ordemId`, `status: "PROCESSAMENTO_PENDENTE"`, `estimatedConciliationAt`, `_links`
-- [ ] Header `X-Correlation-ID` propagado — se ausente, gerado pelo servidor
-- [ ] Validação de DTO com Bean Validation — campos inválidos retornam `HTTP 400`
-- [ ] Teste de integração cobrindo o exemplo completo da Seção 8.3 do README
-
-### Referência no README
-Seção 8.3, RF-01, RNF-01 (p95 < 800ms)
-
----
-
-## TASK-018 · Implementar GatewayPagamentoAdapter com Circuit Breaker e Retry
-
-**Épico:** E3 — Backend  
-**Prioridade:** 🟠 P1  
-**Estimativa:** 5h  
-**Pré-requisitos:** TASK-017
-
-### O que fazer
-Implementar o Anti-Corruption Layer para comunicação com o gateway de pagamento externo.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] `GatewayPagamentoAdapter` implementa interface `GatewayPagamentoPort`
-- [ ] Retry configurado: 4 tentativas, backoff exponencial 1s → 2s → 4s → 8s
-- [ ] Circuit Breaker configurado com Resilience4j: abre após 50% de falha em 10 chamadas
-- [ ] Método `@Recover`: falha definitiva → publica na DLQ do RabbitMQ
-- [ ] `HTTP 503` retornado com headers `X-Circuit-State: OPEN` e `X-Retry-After: {seconds}` quando CB aberto
-- [ ] Teste: simular gateway retornando 5xx → verificar que após 4 tentativas vai para DLQ
-
-### Referência no README
-Seção 7.3, Seção 8.1 (HTTP 503)
-
----
-
-## TASK-019 · Implementar HookRegistry (sistema de extensibilidade)
-
-**Épico:** E3 — Backend  
-**Prioridade:** 🟡 P2  
-**Estimativa:** 4h  
-**Pré-requisitos:** TASK-015, TASK-016
-
-### O que fazer
-Implementar o sistema de hooks que permite customizações isoladas sem modificar o core.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] `HookRegistry` centraliza registro de listeners de eventos de domínio
-- [ ] Plugin sem `fallback` definido → `HookRegistry` rejeita com erro descritivo no startup
-- [ ] Exceção em handler capturada + logada com `correlation_id` — **Core não interrompe**
-- [ ] Eventos publicados: `OrdemFaturadaEvent`, `EstoqueMovimentadoEvent`
-- [ ] Listeners em `plugins/` não têm acesso a repositórios ou serviços do Core
-- [ ] Teste: handler que lança exceção → verificar que o fluxo principal continua normalmente
-
-### Referência no README
-RF-03 (AC-03.1, AC-03.2, AC-03.3), ADR-07
-
----
-
-## TASK-020 · Implementar endpoint de webhook inbound (callbacks do gateway)
-
-**Épico:** E3 — Backend  
-**Prioridade:** 🟠 P1  
-**Estimativa:** 4h  
-**Pré-requisitos:** TASK-018
-
-### O que fazer
-Implementar o endpoint de recebimento de callbacks do gateway de pagamento com validação de assinatura.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] `POST /api/v1/webhooks/gateway` implementado
-- [ ] Validação `HMAC-SHA256` do body com o segredo configurado — assinatura inválida → `HTTP 401`
-- [ ] Replay de webhook > 5 minutos → `HTTP 401` (timestamp no header `X-Signature`)
-- [ ] Evento **salvo em banco antes** de qualquer processamento (Persistence First)
-- [ ] ID do evento externo usado como chave de idempotência para evitar processamento duplo
-- [ ] Teste: enviar mesmo webhook duas vezes → apenas um processamento ocorre
-
-### Referência no README
-Seção 7.4, Seção 8.2 (X-Signature)
-
----
-
-## TASK-021 · Implementar padronização de erros RFC 7807
-
-**Épico:** E3 — Backend  
-**Prioridade:** 🟠 P1  
-**Estimativa:** 2h  
-**Pré-requisitos:** TASK-017
-
-### O que fazer
-Implementar handler global de exceções que retorna erros no formato `application/problem+json`.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] `@ControllerAdvice` global implementado
-- [ ] Todos os erros retornam `Content-Type: application/problem+json`
-- [ ] Campos obrigatórios: `type`, `title`, `status`, `detail`, `instance`, `correlationId`
-- [ ] Mapeamentos: `ValidationException → 400`, `IdempotencyConflictException → 409`, `BusinessRuleException → 422`, `RateLimitException → 429`, `CircuitBreakerOpenException → 503`
-- [ ] Teste: cada tipo de exceção retorna o status HTTP correto com body no formato RFC 7807
-
-### Referência no README
-Seção 7.2
-
----
-
-## TASK-022 · Implementar rate limiting por cliente
-
-**Épico:** E3 — Backend  
-**Prioridade:** 🟡 P2  
-**Estimativa:** 3h  
-**Pré-requisitos:** TASK-003
-
-### O que fazer
-Implementar rate limiting por `clientId` para proteger o core ERP contra burst de um único cliente.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] Rate limiting configurado via Resilience4j ou Bucket4j
-- [ ] Exceder limite → `HTTP 429` com header `Retry-After: {seconds}`
-- [ ] Limite configurável por ambiente via `application.yml`
-- [ ] Rate limiting baseado no `clientId` do JWT (não no IP)
-- [ ] Teste de carga: 200 req/s de um cliente → `HTTP 429` a partir do threshold configurado
-
-### Referência no README
-Seção 8.1 (HTTP 429)
-
----
-
-## TASK-023 · Implementar SSE endpoint para polling de status de ordem
-
-**Épico:** E3 — Backend  
-**Prioridade:** 🟡 P2  
-**Estimativa:** 3h  
-**Pré-requisitos:** TASK-017
-
-### O que fazer
-Implementar Server-Sent Events para notificação push quando o status de uma ordem muda.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] `GET /api/v1/ordens/{id}/events` implementado com SSE
-- [ ] Evento emitido quando status muda (PROCESSANDO → CONCILIADO, etc.)
-- [ ] Conexão encerra automaticamente em estados terminais (`CONCILIADO`, `REJEITADO`, `ESTORNADO`)
-- [ ] Timeout de conexão de 15 minutos (SLA máximo de reconciliação)
-- [ ] Teste: criar ordem, abrir SSE, simular callback do gateway → evento de status recebido no SSE
-
-### Referência no README
-Seção 8.1 (Nota sobre HTTP 202)
-
----
-
----
-
-# 🟠 E4 — SEGURANÇA & COMPLIANCE LGPD
-
----
-
-## TASK-024 · Implementar AesGcmEncryptor para dados PII
-
-**Épico:** E4 — Segurança  
-**Prioridade:** 🔴 P0  
-**Estimativa:** 4h  
-**Pré-requisitos:** TASK-005
-
-### O que fazer
-Implementar o encriptador AES-256-GCM para dados sensíveis (CPF, conta bancária) antes da persistência.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] Classe `AesGcmEncryptor` implementada conforme exemplo da Seção 4.4 do README
-- [ ] IV de 96 bits (12 bytes) gerado aleatoriamente por operação
-- [ ] Chave injetada via `${AES_SECRET_KEY}` do Vault — **nunca** hardcoded
-- [ ] Conversor JPA `@Converter(autoApply = false)` aplicado nos campos PII
-- [ ] Queries de busca por CPF usam hash SHA-256 (não o valor criptografado diretamente)
-- [ ] Teste: persistir cliente com CPF real → verificar que o valor no banco está encriptado
-
-### Referência no README
-ADR-05, RNF-05
-
----
-
-## TASK-025 · Implementar @Masked para logs (mascaramento dinâmico PII)
-
-**Épico:** E4 — Segurança  
-**Prioridade:** 🔴 P0  
-**Estimativa:** 3h  
-**Pré-requisitos:** TASK-003
-
-### O que fazer
-Implementar a anotação `@Masked` que mascara dados PII automaticamente na serialização de logs.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] Anotação `@Masked` criada em `com.sincronizamei.shared.logging`
-- [ ] Serializer customizado do Jackson substitui valor por `***-[últimos 4 dígitos]`
-- [ ] Aplicada em `ClienteDTO`: campos `cpf`, `contaBancaria`, `email`
-- [ ] Logging configurado com Logback em formato JSON estruturado
-- [ ] Teste: logar um `ClienteDTO` com CPF real → verificar que o log contém `***-XXXX`, não o CPF completo
-- [ ] Executar grep nos logs de staging: `grep -E "\d{3}\.\d{3}\.\d{3}-\d{2}"` não encontra nada
-
-### Referência no README
-ADR-05, RNF-06, Seção 4.4
-
----
-
-## TASK-026 · Implementar autenticação JWT com perfis MEI e CONTROLLER
-
-**Épico:** E4 — Segurança  
-**Prioridade:** 🔴 P0  
-**Estimativa:** 5h  
-**Pré-requisitos:** TASK-003
-
-### O que fazer
-Implementar autenticação JWT com suporte a dois perfis de usuário com permissões distintas.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] JWT assinado com RS256 (chave privada via Vault)
-- [ ] Claims obrigatórias: `sub` (userId), `role` (MEI | CONTROLLER), `iat`, `exp`
-- [ ] Sessão armazenada no Redis para revogação imediata (não JWT stateless puro)
-- [ ] Endpoints de auditoria (`/api/v1/auditoria/**`) requerem role `CONTROLLER`
-- [ ] Endpoint de faturamento (`/api/v1/faturamento/**`) aceita ambos os roles
-- [ ] Teste: token de MEI tentando acessar endpoint de auditoria → `HTTP 403`
-
-### Referência no README
-ADR-05, Seção 8.2 (Authorization header)
-
----
-
-## TASK-027 · Implementar propagação de X-Correlation-ID end-to-end
-
-**Épico:** E4 — Segurança  
-**Prioridade:** 🟠 P1  
-**Estimativa:** 3h  
-**Pré-requisitos:** TASK-017
-
-### O que fazer
-Garantir que o `X-Correlation-ID` seja propagado de ponta a ponta: PWA → Backend → RabbitMQ → PostgreSQL.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] Filter Spring adiciona `X-Correlation-ID` ao `MDC` (Mapped Diagnostic Context) do SLF4J
-- [ ] Se ausente na requisição, UUID é gerado pelo servidor e incluído na response
-- [ ] `correlationId` propagado no header de mensagens RabbitMQ (MessageProperties)
-- [ ] Todo log JSON contém campo `correlationId`
-- [ ] Teste: fazer requisição sem o header → response contém header gerado → logs do processamento assíncrono contêm o mesmo ID
-
-### Referência no README
-Seção 8.2, Garantia de Rastreabilidade Distribuída (Seção 1)
-
----
-
-## TASK-028 · Configurar validação de assinatura de webhooks (HMAC-SHA256)
-
-**Épico:** E4 — Segurança  
-**Prioridade:** 🟠 P1  
-**Estimativa:** 2h  
-**Pré-requisitos:** TASK-020
-
-### O que fazer
-Garantir que a validação de assinatura de webhooks seja robusta contra replay attacks.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] Validação HMAC-SHA256: `HMAC(body, secret)` comparado com `X-Signature` header usando `MessageDigest.isEqual()` (constant-time para evitar timing attack)
-- [ ] Timestamp extraído da assinatura — webhooks com timestamp > 5 minutos → `HTTP 401`
-- [ ] Segredo do gateway injetado via Vault
-- [ ] Teste: body modificado após assinatura → `HTTP 401`
-- [ ] Teste: webhook com timestamp de 10 minutos atrás → `HTTP 401`
-
-### Referência no README
-Seção 8.2 (X-Signature), Seção 7.4
-
----
-
----
-
-# 🟡 E5 — MENSAGERIA & WORKERS ASSÍNCRONOS
-
----
-
-## TASK-029 · Configurar RabbitMQ: exchanges, filas e DLQ
-
-**Épico:** E5 — Mensageria  
-**Prioridade:** 🟠 P1  
-**Estimativa:** 4h  
-**Pré-requisitos:** TASK-002, TASK-003
-
-### O que fazer
-Configurar toda a topologia RabbitMQ: exchanges, filas de processamento, filas de reconciliação e Dead Letter Queues.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] Exchange `financeiro.exchange` (direct)
-- [ ] Fila `financeiro.processamento` com DLX configurado para `financeiro.dlq`
-- [ ] Fila `financeiro.reconciliacao` para o worker de 15 min
-- [ ] DLQ `financeiro.dlq` — mensagens chegam aqui após esgotamento de retries
-- [ ] Configuração via `@Bean RabbitMQ` no Spring — não manual na UI
-- [ ] Teste: publicar mensagem na fila principal, simular falha 3x → mensagem aparece na DLQ
-
-### Referência no README
-ADR-02, RF-07 (AC-07.3)
-
----
-
-## TASK-030 · Implementar Worker de Reconciliação (Quartz + Spring Batch)
-
-**Épico:** E5 — Mensageria  
-**Prioridade:** 🔴 P0  
-**Estimativa:** 6h  
-**Pré-requisitos:** TASK-009, TASK-029
-
-### O que fazer
-Implementar o worker que executa a cada 15 minutos e reconcilia ordens em limbo chamando `sp_reconciliar_ordem`.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] Job Quartz configurado com cron `*/15 * * * *` (a cada 15 min)
-- [ ] Worker busca ordens com status `LIMBO` usando cursor-based pagination
-- [ ] Para cada ordem: chama `sp_reconciliar_ordem` via `EntityManager`
-- [ ] Virtual Threads ativadas para processamento concorrente (Project Loom)
-- [ ] Falha em uma ordem não interrompe o processamento das demais
-- [ ] Log estruturado ao final: `{processadas: N, conciliadas: M, divergentes: K, falhas: J}`
-- [ ] Teste de integração: colocar 100 ordens em LIMBO → worker processa todas em < 15 min
-
-### Referência no README
-Garantia de Consistência Eventual (Seção 1), RF-01 (AC-01.1)
-
----
-
-## TASK-031 · Implementar consumidor da DLQ com alerta P1
-
-**Épico:** E5 — Mensageria  
-**Prioridade:** 🟡 P2  
-**Estimativa:** 3h  
-**Pré-requisitos:** TASK-029
-
-### O que fazer
-Implementar o consumidor que monitora a DLQ e dispara alertas quando ultrapassa 100 mensagens.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] Worker verifica tamanho da DLQ a cada 5 minutos via Management API do RabbitMQ
-- [ ] DLQ > 100 mensagens → alerta P1 disparado via canal configurado (e-mail / Slack / webhook)
-- [ ] Canal de alerta configurável via `application.yml` sem recompilar
-- [ ] Mensagens da DLQ logadas com `correlationId` para diagnóstico manual
-- [ ] Endpoint `GET /api/v1/admin/dlq/status` expõe contagem atual da DLQ (role CONTROLLER)
-
-### Referência no README
-RF-07 (AC-07.3)
-
----
-
-## TASK-032 · Implementar alerta de transações em limbo (> 30 min)
-
-**Épico:** E5 — Mensageria  
-**Prioridade:** 🟡 P2  
-**Estimativa:** 3h  
-**Pré-requisitos:** TASK-030
-
-### O que fazer
-Implementar alerta proativo para ordens que ficam mais de 30 minutos em `PROCESSAMENTO_PENDENTE`.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] Query periódica detecta ordens com status `PROCESSAMENTO_PENDENTE` há > 30 minutos
-- [ ] Alerta P2 enviado para operações
-- [ ] Mensagem humanizada na UI: *"Seu pagamento está sendo processado. Aguarde até 15 minutos."*
-- [ ] Registro criado em `auditoria.alertas` com `correlationId`, `orderId`, `timestamp`
-- [ ] Não disparar alerta duplicado para a mesma ordem (idempotência do alerta)
-
-### Referência no README
-RF-07 (AC-07.1, AC-07.2)
-
----
-
-## TASK-033 · Implementar suporte a multi-moeda (RF-06)
-
-**Épico:** E5 — Mensageria  
-**Prioridade:** 🟢 P3  
-**Estimativa:** 5h  
-**Pré-requisitos:** TASK-015
-
-### O que fazer
-Implementar conversão dinâmica de moeda com snapshot diário de câmbio, sem recálculo retroativo.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] Campo `moeda CHAR(3)` e `valor_brl_na_data NUMERIC(15,4)` já existem no schema (confirmar na migration)
-- [ ] Job diário busca taxa de câmbio de API externa e persiste snapshot em `financeiro.cotacoes`
-- [ ] Ao criar ordem em USD: persiste valor USD + equivalente BRL na data da transação
-- [ ] Consulta histórica retorna o BRL da data original — **não** recalcula com taxa atual
-- [ ] Teste: criar ordem USD em Janeiro com câmbio X, consultar em Março → BRL = valor de Janeiro
-
-### Referência no README
-RF-06 (AC-06.1, AC-06.2), Changelog [Unreleased]
-
----
-
----
-
-# 🟡 E6 — FRONTEND REACT PWA
-
----
-
-## TASK-034 · Implementar estrutura base com React Query, Zustand e ErrorBoundary
-
-**Épico:** E6 — Frontend  
-**Prioridade:** 🟠 P1  
-**Estimativa:** 4h  
-**Pré-requisitos:** TASK-004
-
-### O que fazer
-Configurar a estrutura base do frontend com gerenciamento de estado, cache de queries e tratamento de erros.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] `QueryClient` configurado com retry: 3x, stale time: 30s
-- [ ] `Zustand` store com slice: `{ modoEspecialista: boolean, correlationId: string }`
-- [ ] `ErrorBoundary` envolvendo cada painel de dashboard — erro em um painel não derruba a página
-- [ ] Todos os componentes de leitura assíncrona têm Skeleton de loading (CLS = 0)
-- [ ] Lógica de negócio **proibida** no frontend — qualquer cálculo deve vir do backend
-- [ ] Teste: simular erro em uma query → ErrorBoundary exibe mensagem de erro, resto da UI funciona
-
-### Referência no README
-Seção 4.5, Restrição #2
-
----
-
-## TASK-035 · Implementar modo Dual-UX (MEI vs CONTROLLER)
-
-**Épico:** E6 — Frontend  
-**Prioridade:** 🟡 P2  
-**Estimativa:** 4h  
-**Pré-requisitos:** TASK-034, TASK-026
-
-### O que fazer
-Implementar a interface dual que adapta o contexto da UI ao perfil do usuário autenticado.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] Modo MEI: foco em faturamento rápido, ações simples, sem dados de auditoria
-- [ ] Modo CONTROLLER: densidade analítica, acesso a histórico bitemporal, divergências
-- [ ] Toggle de modo persiste em `sessionStorage` via Zustand
-- [ ] Perfil do JWT determina as permissões disponíveis — UI não exibe funcionalidades proibidas
-- [ ] Transição entre modos sem reload da página
-
-### Referência no README
-Seção 1 (Experiência Dual-UX), Seção 4.5
-
----
-
-## TASK-036 · Implementar formulário de faturamento com idempotência no cliente
-
-**Épico:** E6 — Frontend  
-**Prioridade:** 🟡 P2  
-**Estimativa:** 4h  
-**Pré-requisitos:** TASK-035, TASK-017
-
-### O que fazer
-Implementar o formulário de criação de ordem com geração automática de `X-Idempotency-Key`.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] UUID v4 gerado no frontend no momento de abertura do formulário
-- [ ] UUID enviado no header `X-Idempotency-Key` a cada tentativa
-- [ ] Resubmit do formulário: mesmo UUID reenviado → `HTTP 409` tratado como sucesso (order já criada)
-- [ ] Validação com Zod antes do envio (campos obrigatórios, formatos)
-- [ ] Feedback visual: estado "Processando..." com spinner após submit
-- [ ] Polling de status via SSE endpoint após `HTTP 202` recebido
-
-### Referência no README
-Seção 8.3, RF-02
-
----
-
-## TASK-037 · Implementar indicador de Circuit Breaker em tempo real
-
-**Épico:** E6 — Frontend  
-**Prioridade:** 🟡 P2  
-**Estimativa:** 3h  
-**Pré-requisitos:** TASK-018, TASK-036
-
-### O que fazer
-Implementar o componente de status do Circuit Breaker que informa o usuário quando o gateway está indisponível.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] Componente `CircuitBreakerStatus` visível no dashboard
-- [ ] Estados: CLOSED (verde), OPEN (vermelho), HALF_OPEN (amarelo)
-- [ ] Quando OPEN: exibe mensagem *"Gateway temporariamente indisponível. Tentando novamente em X segundos."*
-- [ ] Status atualizado via polling leve a cada 30s no endpoint `GET /api/v1/health/circuit-breaker`
-- [ ] Teste: abrir CB no backend → componente exibe estado vermelho em < 35 segundos
-
-### Referência no README
-Seção 4.5 (Indicador de Circuit Breaker)
-
----
-
-## TASK-038 · Implementar painel de auditoria bitemporal (modo CONTROLLER)
-
-**Épico:** E6 — Frontend  
-**Prioridade:** 🟢 P3  
-**Estimativa:** 5h  
-**Pré-requisitos:** TASK-035, TASK-011
-
-### O que fazer
-Implementar a interface de consulta histórica que permite ao CONTROLLER consultar estados passados do sistema.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] Date picker para seleção da data de consulta histórica
-- [ ] Chamada para `fn_estado_bitemporal(id, asOfDate)` via API
-- [ ] Exibe linha do tempo visual das versões do registro com `valid_from` e `system_init_tstz`
-- [ ] Diferencia visualmente "data do evento no negócio" vs "data que o sistema registrou"
-- [ ] Disponível apenas para role CONTROLLER (frontend valida via JWT claims)
-
-### Referência no README
-RF-05, Apêndice A (Glossário: Tempo de Validade vs Tempo de Sistema)
-
----
-
-## TASK-039 · Configurar PWA (Service Worker + Manifest)
-
-**Épico:** E6 — Frontend  
-**Prioridade:** 🟢 P3  
-**Estimativa:** 3h  
-**Pré-requisitos:** TASK-004
-
-### O que fazer
-Configurar o Service Worker e manifest para funcionamento offline parcial e instalabilidade.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] `manifest.json` com: `name`, `short_name`, `icons` (192px + 512px), `theme_color`, `display: standalone`
-- [ ] Service Worker com estratégia `NetworkFirst` para API calls, `CacheFirst` para assets estáticos
-- [ ] App instalável via browser (ícone de instalação exibido)
-- [ ] Offline: exibe dados em cache com banner "Modo offline — dados podem estar desatualizados"
-- [ ] Lighthouse PWA score ≥ 90
-
-### Referência no README
-Badges do README (PWA-Ready)
-
----
-
-## TASK-040 · Implementar internacionalização e acessibilidade base
-
-**Épico:** E6 — Frontend  
-**Prioridade:** 🟢 P3  
-**Estimativa:** 3h  
-**Pré-requisitos:** TASK-034
-
-### O que fazer
-Garantir que a interface esteja em português e siga as diretrizes básicas de acessibilidade.
-### Critérios de Aceite (TDD Lifecycle)
-- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
-- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
-- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
-#### Regras de Negócio (a serem validadas nos testes):
-- [ ] Todos os textos em pt-BR
-- [ ] `lang="pt-BR"` no HTML
-- [ ] Inputs com `aria-label` ou `<label>` associado
-- [ ] Contraste mínimo WCAG AA (4.5:1) verificado com axe DevTools
-- [ ] Navegação por teclado funcional nos formulários principais
-- [ ] Lighthouse Accessibility score ≥ 85
-
----
-
----
-
-# 🟠 E7 — TESTES & QUALIDADE
-
----
-
-## TASK-041 · Configurar Testcontainers para testes de integração
-
-**Épico:** E7 — Testes  
+**Épico:** E3 — Testes  
 **Prioridade:** 🔴 P0  
 **Estimativa:** 3h  
 **Pré-requisitos:** TASK-003, TASK-007
@@ -1116,9 +415,9 @@ Restrição #4, ADR-06
 
 ---
 
-## TASK-042 · Implementar testes de módulo com ArchUnit
+## TASK-015 · Implementar testes de módulo com ArchUnit
 
-**Épico:** E7 — Testes  
+**Épico:** E3 — Testes  
 **Prioridade:** 🟠 P1  
 **Estimativa:** 3h  
 **Pré-requisitos:** TASK-015, TASK-016
@@ -1142,9 +441,9 @@ ADR-01, Seção 9.2 (Step 4 do CI/CD)
 
 ---
 
-## TASK-043 · Implementar testes de integração — fluxo completo de faturamento
+## TASK-016 · Implementar testes de integração — fluxo completo de faturamento
 
-**Épico:** E7 — Testes  
+**Épico:** E3 — Testes  
 **Prioridade:** 🟠 P1  
 **Estimativa:** 5h  
 **Pré-requisitos:** TASK-041, TASK-030, TASK-017
@@ -1168,9 +467,9 @@ Seção 4 (Plano de Testes), RNF (Cobertura ≥ 90%)
 
 ---
 
-## TASK-044 · Configurar JaCoCo e gates de cobertura no Maven
+## TASK-017 · Configurar JaCoCo e gates de cobertura no Maven
 
-**Épico:** E7 — Testes  
+**Épico:** E3 — Testes  
 **Prioridade:** 🟠 P1  
 **Estimativa:** 2h  
 **Pré-requisitos:** TASK-043
@@ -1193,9 +492,9 @@ Badge de cobertura ≥90%, Seção 9.2 (Step 2 do CI)
 
 ---
 
-## TASK-045 · Configurar script k6 de smoke test (performance)
+## TASK-018 · Configurar script k6 de smoke test (performance)
 
-**Épico:** E7 — Testes  
+**Épico:** E3 — Testes  
 **Prioridade:** 🟡 P2  
 **Estimativa:** 3h  
 **Pré-requisitos:** TASK-017
@@ -1219,9 +518,9 @@ RNF-01, Seção 9.2 (Step 8 do CI)
 
 ---
 
-## TASK-046 · Configurar SAST, CVE scan e secret scan no CI
+## TASK-019 · Configurar SAST, CVE scan e secret scan no CI
 
-**Épico:** E7 — Testes  
+**Épico:** E3 — Testes  
 **Prioridade:** 🟠 P1  
 **Estimativa:** 3h  
 **Pré-requisitos:** TASK-003
@@ -1246,12 +545,1138 @@ Badge SAST-zero-critical, Seção 9.2 (Steps 5 e 6)
 ---
 
 ---
-
-# 🟡 E8 — CI/CD & DEPLOY BLUE-GREEN
+# 🔴 E4 — BACKEND CORE ERP (JAVA/SPRING)
 
 ---
 
-## TASK-047 · Criar workflow GitHub Actions (pipeline completa)
+## TASK-020 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-021 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar IdempotencyInterceptor (Redis SET NX EX)
+
+**Épico:** E4 — Backend  
+**Prioridade:** 🔴 P0  
+**Estimativa:** 5h  
+**Pré-requisitos:** TASK-003, TASK-002
+
+### O que fazer
+Implementar o interceptor de idempotência que protege todos os endpoints POST/PUT de processamento duplicado.
+
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED – Testes]** Escrever os testes de integração do `IdempotencyInterceptor` simulando requisições duplicadas. O código deve falhar por falta da implementação.
+- [ ] **[GREEN – Lógica]** Implementar o HandlerInterceptor validando o `X-Idempotency-Key` (400), chave duplicada (409) e race conditions (`NX EX 86400`). Fazer os testes passarem perfeitamente.
+- [ ] **[REFACTOR – Clean Code]** Isolar as dependências usando POO, movendo o acesso ao Redis para uma camada de serviço abstrata injetada no Interceptor, em respeito aos Design Patterns.
+
+### Referência no README
+RF-02 (AC-02.1, AC-02.2, AC-02.3), ADR-03
+
+---
+
+## TASK-022 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-023 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar bounded context Financeiro (entidades e repositórios)
+
+**Épico:** E4 — Backend  
+**Prioridade:** 🔴 P0  
+**Estimativa:** 6h  
+**Pré-requisitos:** TASK-007, TASK-014
+
+### O que fazer
+Criar as entidades JPA, repositórios e serviços do módulo financeiro respeitando o bounded context.
+
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED – Testes]** Criar o projeto de testes para transições de estado do enum `OrdemStatus`. Validar os relacionamentos de models sem o banco real estar pronto na View.
+- [ ] **[GREEN – Lógica MVC]** Mapear as Entidades da Camada Model (`Ordem`, `Lancamento`) em `com.sincronizamei.financeiro.domain`. Realizar as mutações por repositórios não-bitemporais limitados a NativeQuery.
+- [ ] **[REFACTOR – POO]** Aplicar polimorfismo nas transações da máquina de estados, evitar repetição de if/elses e isolar a camada de Eventos. Proibido acoplamento de outros domínios via ArchUnit.
+
+### Referência no README
+Apêndice B — Máquina de Estados, ADR-01, Restrição #3
+
+---
+
+## TASK-024 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-025 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar bounded context Estoque (entidades e repositórios)
+
+**Épico:** E4 — Backend  
+**Prioridade:** 🟠 P1  
+**Estimativa:** 5h  
+**Pré-requisitos:** TASK-007
+
+### O que fazer
+Criar as entidades, repositórios e serviços do módulo de estoque.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] Entidades em `com.sincronizamei.estoque.domain`: `Produto`, `MovimentacaoEstoque`
+- [ ] Capacidade para catálogo de 500k itens (índices corretos nas migrations)
+- [ ] Movimentação de estoque usa stored procedure para atomicidade
+- [ ] Listener de `OrdemCriadaEvent` do módulo financeiro atualiza estoque sem acesso direto ao repositório financeiro
+- [ ] Teste de integração: criar ordem → verificar baixa de estoque sem chamar nenhum método do módulo financeiro diretamente
+
+### Referência no README
+RNF-03, ADR-01
+
+---
+
+## TASK-026 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-027 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar FaturamentoController (endpoint POST /api/v1/faturamento/ordens)
+
+**Épico:** E4 — Backend  
+**Prioridade:** 🔴 P0  
+**Estimativa:** 5h  
+**Pré-requisitos:** TASK-015, TASK-014
+
+### O que fazer
+Implementar o endpoint de faturamento seguindo o protocolo de resiliência documentado no README.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] `POST /api/v1/faturamento/ordens` implementado
+- [ ] Response síncrono retorna `HTTP 202 Accepted` com `Location` header
+- [ ] Body de resposta contém: `ordemId`, `status: "PROCESSAMENTO_PENDENTE"`, `estimatedConciliationAt`, `_links`
+- [ ] Header `X-Correlation-ID` propagado — se ausente, gerado pelo servidor
+- [ ] Validação de DTO com Bean Validation — campos inválidos retornam `HTTP 400`
+- [ ] Teste de integração cobrindo o exemplo completo da Seção 8.3 do README
+
+### Referência no README
+Seção 8.3, RF-01, RNF-01 (p95 < 800ms)
+
+---
+
+## TASK-028 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-029 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar GatewayPagamentoAdapter com Circuit Breaker e Retry
+
+**Épico:** E4 — Backend  
+**Prioridade:** 🟠 P1  
+**Estimativa:** 5h  
+**Pré-requisitos:** TASK-017
+
+### O que fazer
+Implementar o Anti-Corruption Layer para comunicação com o gateway de pagamento externo.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] `GatewayPagamentoAdapter` implementa interface `GatewayPagamentoPort`
+- [ ] Retry configurado: 4 tentativas, backoff exponencial 1s → 2s → 4s → 8s
+- [ ] Circuit Breaker configurado com Resilience4j: abre após 50% de falha em 10 chamadas
+- [ ] Método `@Recover`: falha definitiva → publica na DLQ do RabbitMQ
+- [ ] `HTTP 503` retornado com headers `X-Circuit-State: OPEN` e `X-Retry-After: {seconds}` quando CB aberto
+- [ ] Teste: simular gateway retornando 5xx → verificar que após 4 tentativas vai para DLQ
+
+### Referência no README
+Seção 7.3, Seção 8.1 (HTTP 503)
+
+---
+
+## TASK-030 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-031 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar HookRegistry (sistema de extensibilidade)
+
+**Épico:** E4 — Backend  
+**Prioridade:** 🟡 P2  
+**Estimativa:** 4h  
+**Pré-requisitos:** TASK-015, TASK-016
+
+### O que fazer
+Implementar o sistema de hooks que permite customizações isoladas sem modificar o core.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] `HookRegistry` centraliza registro de listeners de eventos de domínio
+- [ ] Plugin sem `fallback` definido → `HookRegistry` rejeita com erro descritivo no startup
+- [ ] Exceção em handler capturada + logada com `correlation_id` — **Core não interrompe**
+- [ ] Eventos publicados: `OrdemFaturadaEvent`, `EstoqueMovimentadoEvent`
+- [ ] Listeners em `plugins/` não têm acesso a repositórios ou serviços do Core
+- [ ] Teste: handler que lança exceção → verificar que o fluxo principal continua normalmente
+
+### Referência no README
+RF-03 (AC-03.1, AC-03.2, AC-03.3), ADR-07
+
+---
+
+## TASK-032 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-033 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar endpoint de webhook inbound (callbacks do gateway)
+
+**Épico:** E4 — Backend  
+**Prioridade:** 🟠 P1  
+**Estimativa:** 4h  
+**Pré-requisitos:** TASK-018
+
+### O que fazer
+Implementar o endpoint de recebimento de callbacks do gateway de pagamento com validação de assinatura.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] `POST /api/v1/webhooks/gateway` implementado
+- [ ] Validação `HMAC-SHA256` do body com o segredo configurado — assinatura inválida → `HTTP 401`
+- [ ] Replay de webhook > 5 minutos → `HTTP 401` (timestamp no header `X-Signature`)
+- [ ] Evento **salvo em banco antes** de qualquer processamento (Persistence First)
+- [ ] ID do evento externo usado como chave de idempotência para evitar processamento duplo
+- [ ] Teste: enviar mesmo webhook duas vezes → apenas um processamento ocorre
+
+### Referência no README
+Seção 7.4, Seção 8.2 (X-Signature)
+
+---
+
+## TASK-034 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-035 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar padronização de erros RFC 7807
+
+**Épico:** E4 — Backend  
+**Prioridade:** 🟠 P1  
+**Estimativa:** 2h  
+**Pré-requisitos:** TASK-017
+
+### O que fazer
+Implementar handler global de exceções que retorna erros no formato `application/problem+json`.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] `@ControllerAdvice` global implementado
+- [ ] Todos os erros retornam `Content-Type: application/problem+json`
+- [ ] Campos obrigatórios: `type`, `title`, `status`, `detail`, `instance`, `correlationId`
+- [ ] Mapeamentos: `ValidationException → 400`, `IdempotencyConflictException → 409`, `BusinessRuleException → 422`, `RateLimitException → 429`, `CircuitBreakerOpenException → 503`
+- [ ] Teste: cada tipo de exceção retorna o status HTTP correto com body no formato RFC 7807
+
+### Referência no README
+Seção 7.2
+
+---
+
+## TASK-036 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-037 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar rate limiting por cliente
+
+**Épico:** E4 — Backend  
+**Prioridade:** 🟡 P2  
+**Estimativa:** 3h  
+**Pré-requisitos:** TASK-003
+
+### O que fazer
+Implementar rate limiting por `clientId` para proteger o core ERP contra burst de um único cliente.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] Rate limiting configurado via Resilience4j ou Bucket4j
+- [ ] Exceder limite → `HTTP 429` com header `Retry-After: {seconds}`
+- [ ] Limite configurável por ambiente via `application.yml`
+- [ ] Rate limiting baseado no `clientId` do JWT (não no IP)
+- [ ] Teste de carga: 200 req/s de um cliente → `HTTP 429` a partir do threshold configurado
+
+### Referência no README
+Seção 8.1 (HTTP 429)
+
+---
+
+## TASK-038 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-039 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar SSE endpoint para polling de status de ordem
+
+**Épico:** E4 — Backend  
+**Prioridade:** 🟡 P2  
+**Estimativa:** 3h  
+**Pré-requisitos:** TASK-017
+
+### O que fazer
+Implementar Server-Sent Events para notificação push quando o status de uma ordem muda.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] `GET /api/v1/ordens/{id}/events` implementado com SSE
+- [ ] Evento emitido quando status muda (PROCESSANDO → CONCILIADO, etc.)
+- [ ] Conexão encerra automaticamente em estados terminais (`CONCILIADO`, `REJEITADO`, `ESTORNADO`)
+- [ ] Timeout de conexão de 15 minutos (SLA máximo de reconciliação)
+- [ ] Teste: criar ordem, abrir SSE, simular callback do gateway → evento de status recebido no SSE
+
+### Referência no README
+Seção 8.1 (Nota sobre HTTP 202)
+
+---
+
+---
+# 🔴 E5 — SEGURANÇA & COMPLIANCE LGPD
+
+---
+
+## TASK-040 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-041 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar AesGcmEncryptor para dados PII
+
+**Épico:** E5 — Segurança  
+**Prioridade:** 🔴 P0  
+**Estimativa:** 4h  
+**Pré-requisitos:** TASK-005
+
+### O que fazer
+Implementar o encriptador AES-256-GCM para dados sensíveis (CPF, conta bancária) antes da persistência.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] Classe `AesGcmEncryptor` implementada conforme exemplo da Seção 4.4 do README
+- [ ] IV de 96 bits (12 bytes) gerado aleatoriamente por operação
+- [ ] Chave injetada via `${AES_SECRET_KEY}` do Vault — **nunca** hardcoded
+- [ ] Conversor JPA `@Converter(autoApply = false)` aplicado nos campos PII
+- [ ] Queries de busca por CPF usam hash SHA-256 (não o valor criptografado diretamente)
+- [ ] Teste: persistir cliente com CPF real → verificar que o valor no banco está encriptado
+
+### Referência no README
+ADR-05, RNF-05
+
+---
+
+## TASK-042 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-043 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar @Masked para logs (mascaramento dinâmico PII)
+
+**Épico:** E5 — Segurança  
+**Prioridade:** 🔴 P0  
+**Estimativa:** 3h  
+**Pré-requisitos:** TASK-003
+
+### O que fazer
+Implementar a anotação `@Masked` que mascara dados PII automaticamente na serialização de logs.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] Anotação `@Masked` criada em `com.sincronizamei.shared.logging`
+- [ ] Serializer customizado do Jackson substitui valor por `***-[últimos 4 dígitos]`
+- [ ] Aplicada em `ClienteDTO`: campos `cpf`, `contaBancaria`, `email`
+- [ ] Logging configurado com Logback em formato JSON estruturado
+- [ ] Teste: logar um `ClienteDTO` com CPF real → verificar que o log contém `***-XXXX`, não o CPF completo
+- [ ] Executar grep nos logs de staging: `grep -E "\d{3}\.\d{3}\.\d{3}-\d{2}"` não encontra nada
+
+### Referência no README
+ADR-05, RNF-06, Seção 4.4
+
+---
+
+## TASK-044 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-045 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar autenticação JWT com perfis MEI e CONTROLLER
+
+**Épico:** E5 — Segurança  
+**Prioridade:** 🔴 P0  
+**Estimativa:** 5h  
+**Pré-requisitos:** TASK-003
+
+### O que fazer
+Implementar autenticação JWT com suporte a dois perfis de usuário com permissões distintas.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] JWT assinado com RS256 (chave privada via Vault)
+- [ ] Claims obrigatórias: `sub` (userId), `role` (MEI | CONTROLLER), `iat`, `exp`
+- [ ] Sessão armazenada no Redis para revogação imediata (não JWT stateless puro)
+- [ ] Endpoints de auditoria (`/api/v1/auditoria/**`) requerem role `CONTROLLER`
+- [ ] Endpoint de faturamento (`/api/v1/faturamento/**`) aceita ambos os roles
+- [ ] Teste: token de MEI tentando acessar endpoint de auditoria → `HTTP 403`
+
+### Referência no README
+ADR-05, Seção 8.2 (Authorization header)
+
+---
+
+## TASK-046 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-047 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar propagação de X-Correlation-ID end-to-end
+
+**Épico:** E5 — Segurança  
+**Prioridade:** 🟠 P1  
+**Estimativa:** 3h  
+**Pré-requisitos:** TASK-017
+
+### O que fazer
+Garantir que o `X-Correlation-ID` seja propagado de ponta a ponta: PWA → Backend → RabbitMQ → PostgreSQL.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] Filter Spring adiciona `X-Correlation-ID` ao `MDC` (Mapped Diagnostic Context) do SLF4J
+- [ ] Se ausente na requisição, UUID é gerado pelo servidor e incluído na response
+- [ ] `correlationId` propagado no header de mensagens RabbitMQ (MessageProperties)
+- [ ] Todo log JSON contém campo `correlationId`
+- [ ] Teste: fazer requisição sem o header → response contém header gerado → logs do processamento assíncrono contêm o mesmo ID
+
+### Referência no README
+Seção 8.2, Garantia de Rastreabilidade Distribuída (Seção 1)
+
+---
+
+## TASK-048 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-049 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Configurar validação de assinatura de webhooks (HMAC-SHA256)
+
+**Épico:** E5 — Segurança  
+**Prioridade:** 🟠 P1  
+**Estimativa:** 2h  
+**Pré-requisitos:** TASK-020
+
+### O que fazer
+Garantir que a validação de assinatura de webhooks seja robusta contra replay attacks.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] Validação HMAC-SHA256: `HMAC(body, secret)` comparado com `X-Signature` header usando `MessageDigest.isEqual()` (constant-time para evitar timing attack)
+- [ ] Timestamp extraído da assinatura — webhooks com timestamp > 5 minutos → `HTTP 401`
+- [ ] Segredo do gateway injetado via Vault
+- [ ] Teste: body modificado após assinatura → `HTTP 401`
+- [ ] Teste: webhook com timestamp de 10 minutos atrás → `HTTP 401`
+
+### Referência no README
+Seção 8.2 (X-Signature), Seção 7.4
+
+---
+
+---
+# 🔴 E6 — MENSAGERIA & WORKERS ASSÍNCRONOS
+
+---
+
+## TASK-050 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-051 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Configurar RabbitMQ: exchanges, filas e DLQ
+
+**Épico:** E6 — Mensageria  
+**Prioridade:** 🟠 P1  
+**Estimativa:** 4h  
+**Pré-requisitos:** TASK-002, TASK-003
+
+### O que fazer
+Configurar toda a topologia RabbitMQ: exchanges, filas de processamento, filas de reconciliação e Dead Letter Queues.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] Exchange `financeiro.exchange` (direct)
+- [ ] Fila `financeiro.processamento` com DLX configurado para `financeiro.dlq`
+- [ ] Fila `financeiro.reconciliacao` para o worker de 15 min
+- [ ] DLQ `financeiro.dlq` — mensagens chegam aqui após esgotamento de retries
+- [ ] Configuração via `@Bean RabbitMQ` no Spring — não manual na UI
+- [ ] Teste: publicar mensagem na fila principal, simular falha 3x → mensagem aparece na DLQ
+
+### Referência no README
+ADR-02, RF-07 (AC-07.3)
+
+---
+
+## TASK-052 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-053 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar Worker de Reconciliação (Quartz + Spring Batch)
+
+**Épico:** E6 — Mensageria  
+**Prioridade:** 🔴 P0  
+**Estimativa:** 6h  
+**Pré-requisitos:** TASK-009, TASK-029
+
+### O que fazer
+Implementar o worker que executa a cada 15 minutos e reconcilia ordens em limbo chamando `sp_reconciliar_ordem`.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] Job Quartz configurado com cron `*/15 * * * *` (a cada 15 min)
+- [ ] Worker busca ordens com status `LIMBO` usando cursor-based pagination
+- [ ] Para cada ordem: chama `sp_reconciliar_ordem` via `EntityManager`
+- [ ] Virtual Threads ativadas para processamento concorrente (Project Loom)
+- [ ] Falha em uma ordem não interrompe o processamento das demais
+- [ ] Log estruturado ao final: `{processadas: N, conciliadas: M, divergentes: K, falhas: J}`
+- [ ] Teste de integração: colocar 100 ordens em LIMBO → worker processa todas em < 15 min
+
+### Referência no README
+Garantia de Consistência Eventual (Seção 1), RF-01 (AC-01.1)
+
+---
+
+## TASK-054 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-055 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar consumidor da DLQ com alerta P1
+
+**Épico:** E6 — Mensageria  
+**Prioridade:** 🟡 P2  
+**Estimativa:** 3h  
+**Pré-requisitos:** TASK-029
+
+### O que fazer
+Implementar o consumidor que monitora a DLQ e dispara alertas quando ultrapassa 100 mensagens.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] Worker verifica tamanho da DLQ a cada 5 minutos via Management API do RabbitMQ
+- [ ] DLQ > 100 mensagens → alerta P1 disparado via canal configurado (e-mail / Slack / webhook)
+- [ ] Canal de alerta configurável via `application.yml` sem recompilar
+- [ ] Mensagens da DLQ logadas com `correlationId` para diagnóstico manual
+- [ ] Endpoint `GET /api/v1/admin/dlq/status` expõe contagem atual da DLQ (role CONTROLLER)
+
+### Referência no README
+RF-07 (AC-07.3)
+
+---
+
+## TASK-056 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-057 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar alerta de transações em limbo (> 30 min)
+
+**Épico:** E6 — Mensageria  
+**Prioridade:** 🟡 P2  
+**Estimativa:** 3h  
+**Pré-requisitos:** TASK-030
+
+### O que fazer
+Implementar alerta proativo para ordens que ficam mais de 30 minutos em `PROCESSAMENTO_PENDENTE`.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] Query periódica detecta ordens com status `PROCESSAMENTO_PENDENTE` há > 30 minutos
+- [ ] Alerta P2 enviado para operações
+- [ ] Mensagem humanizada na UI: *"Seu pagamento está sendo processado. Aguarde até 15 minutos."*
+- [ ] Registro criado em `auditoria.alertas` com `correlationId`, `orderId`, `timestamp`
+- [ ] Não disparar alerta duplicado para a mesma ordem (idempotência do alerta)
+
+### Referência no README
+RF-07 (AC-07.1, AC-07.2)
+
+---
+
+## TASK-058 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-059 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar suporte a multi-moeda (RF-06)
+
+**Épico:** E6 — Mensageria  
+**Prioridade:** 🟢 P3  
+**Estimativa:** 5h  
+**Pré-requisitos:** TASK-015
+
+### O que fazer
+Implementar conversão dinâmica de moeda com snapshot diário de câmbio, sem recálculo retroativo.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] Campo `moeda CHAR(3)` e `valor_brl_na_data NUMERIC(15,4)` já existem no schema (confirmar na migration)
+- [ ] Job diário busca taxa de câmbio de API externa e persiste snapshot em `financeiro.cotacoes`
+- [ ] Ao criar ordem em USD: persiste valor USD + equivalente BRL na data da transação
+- [ ] Consulta histórica retorna o BRL da data original — **não** recalcula com taxa atual
+- [ ] Teste: criar ordem USD em Janeiro com câmbio X, consultar em Março → BRL = valor de Janeiro
+
+### Referência no README
+RF-06 (AC-06.1, AC-06.2), Changelog [Unreleased]
+
+---
+
+---
+# 🔴 E7 — FRONTEND REACT PWA
+
+---
+
+## TASK-060 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-061 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar estrutura base com React Query, Zustand e ErrorBoundary
+
+**Épico:** E7 — Frontend  
+**Prioridade:** 🟠 P1  
+**Estimativa:** 4h  
+**Pré-requisitos:** TASK-004
+
+### O que fazer
+Configurar a estrutura base do frontend com gerenciamento de estado, cache de queries e tratamento de erros.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] `QueryClient` configurado com retry: 3x, stale time: 30s
+- [ ] `Zustand` store com slice: `{ modoEspecialista: boolean, correlationId: string }`
+- [ ] `ErrorBoundary` envolvendo cada painel de dashboard — erro em um painel não derruba a página
+- [ ] Todos os componentes de leitura assíncrona têm Skeleton de loading (CLS = 0)
+- [ ] Lógica de negócio **proibida** no frontend — qualquer cálculo deve vir do backend
+- [ ] Teste: simular erro em uma query → ErrorBoundary exibe mensagem de erro, resto da UI funciona
+
+### Referência no README
+Seção 4.5, Restrição #2
+
+---
+
+## TASK-062 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-063 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar modo Dual-UX (MEI vs CONTROLLER)
+
+**Épico:** E7 — Frontend  
+**Prioridade:** 🟡 P2  
+**Estimativa:** 4h  
+**Pré-requisitos:** TASK-034, TASK-026
+
+### O que fazer
+Implementar a interface dual que adapta o contexto da UI ao perfil do usuário autenticado.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] Modo MEI: foco em faturamento rápido, ações simples, sem dados de auditoria
+- [ ] Modo CONTROLLER: densidade analítica, acesso a histórico bitemporal, divergências
+- [ ] Toggle de modo persiste em `sessionStorage` via Zustand
+- [ ] Perfil do JWT determina as permissões disponíveis — UI não exibe funcionalidades proibidas
+- [ ] Transição entre modos sem reload da página
+
+### Referência no README
+Seção 1 (Experiência Dual-UX), Seção 4.5
+
+---
+
+## TASK-064 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-065 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar formulário de faturamento com idempotência no cliente
+
+**Épico:** E7 — Frontend  
+**Prioridade:** 🟡 P2  
+**Estimativa:** 4h  
+**Pré-requisitos:** TASK-035, TASK-017
+
+### O que fazer
+Implementar o formulário de criação de ordem com geração automática de `X-Idempotency-Key`.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] UUID v4 gerado no frontend no momento de abertura do formulário
+- [ ] UUID enviado no header `X-Idempotency-Key` a cada tentativa
+- [ ] Resubmit do formulário: mesmo UUID reenviado → `HTTP 409` tratado como sucesso (order já criada)
+- [ ] Validação com Zod antes do envio (campos obrigatórios, formatos)
+- [ ] Feedback visual: estado "Processando..." com spinner após submit
+- [ ] Polling de status via SSE endpoint após `HTTP 202` recebido
+
+### Referência no README
+Seção 8.3, RF-02
+
+---
+
+## TASK-066 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-067 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar indicador de Circuit Breaker em tempo real
+
+**Épico:** E7 — Frontend  
+**Prioridade:** 🟡 P2  
+**Estimativa:** 3h  
+**Pré-requisitos:** TASK-018, TASK-036
+
+### O que fazer
+Implementar o componente de status do Circuit Breaker que informa o usuário quando o gateway está indisponível.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] Componente `CircuitBreakerStatus` visível no dashboard
+- [ ] Estados: CLOSED (verde), OPEN (vermelho), HALF_OPEN (amarelo)
+- [ ] Quando OPEN: exibe mensagem *"Gateway temporariamente indisponível. Tentando novamente em X segundos."*
+- [ ] Status atualizado via polling leve a cada 30s no endpoint `GET /api/v1/health/circuit-breaker`
+- [ ] Teste: abrir CB no backend → componente exibe estado vermelho em < 35 segundos
+
+### Referência no README
+Seção 4.5 (Indicador de Circuit Breaker)
+
+---
+
+## TASK-068 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-069 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar painel de auditoria bitemporal (modo CONTROLLER)
+
+**Épico:** E7 — Frontend  
+**Prioridade:** 🟢 P3  
+**Estimativa:** 5h  
+**Pré-requisitos:** TASK-035, TASK-011
+
+### O que fazer
+Implementar a interface de consulta histórica que permite ao CONTROLLER consultar estados passados do sistema.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] Date picker para seleção da data de consulta histórica
+- [ ] Chamada para `fn_estado_bitemporal(id, asOfDate)` via API
+- [ ] Exibe linha do tempo visual das versões do registro com `valid_from` e `system_init_tstz`
+- [ ] Diferencia visualmente "data do evento no negócio" vs "data que o sistema registrou"
+- [ ] Disponível apenas para role CONTROLLER (frontend valida via JWT claims)
+
+### Referência no README
+RF-05, Apêndice A (Glossário: Tempo de Validade vs Tempo de Sistema)
+
+---
+
+## TASK-070 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-071 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Configurar PWA (Service Worker + Manifest)
+
+**Épico:** E7 — Frontend  
+**Prioridade:** 🟢 P3  
+**Estimativa:** 3h  
+**Pré-requisitos:** TASK-004
+
+### O que fazer
+Configurar o Service Worker e manifest para funcionamento offline parcial e instalabilidade.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] `manifest.json` com: `name`, `short_name`, `icons` (192px + 512px), `theme_color`, `display: standalone`
+- [ ] Service Worker com estratégia `NetworkFirst` para API calls, `CacheFirst` para assets estáticos
+- [ ] App instalável via browser (ícone de instalação exibido)
+- [ ] Offline: exibe dados em cache com banner "Modo offline — dados podem estar desatualizados"
+- [ ] Lighthouse PWA score ≥ 90
+
+### Referência no README
+Badges do README (PWA-Ready)
+
+---
+
+## TASK-072 · [TDD RED] Criar testes falhos para: Funcionalidade
+
+**Prioridade:** 🔴 P0
+**Estimativa:** 2h
+
+### O que fazer
+Implementar testes unitários e de integração (com features mockadas) verificando os limites das regras da funcionalidade 'Funcionalidade'. Esta task OBRIGATORIAMENTE precede o desenvolvimento do código da aplicação.
+
+### Critérios de Aceite
+- [ ] Configurar fixtures e abstrações do ambiente teste.
+- [ ] Injetar os Mocks nas dependências que ainda não foram criadas.
+- [ ] Garantir que os testes falham corretamente (RED).
+
+---
+
+## TASK-073 · [TDD GREEN/REFACTOR] Implementar lógica: Funcionalidade
+· Implementar internacionalização e acessibilidade base
+
+**Épico:** E7 — Frontend  
+**Prioridade:** 🟢 P3  
+**Estimativa:** 3h  
+**Pré-requisitos:** TASK-034
+
+### O que fazer
+Garantir que a interface esteja em português e siga as diretrizes básicas de acessibilidade.
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
+- [ ] Todos os textos em pt-BR
+- [ ] `lang="pt-BR"` no HTML
+- [ ] Inputs com `aria-label` ou `<label>` associado
+- [ ] Contraste mínimo WCAG AA (4.5:1) verificado com axe DevTools
+- [ ] Navegação por teclado funcional nos formulários principais
+- [ ] Lighthouse Accessibility score ≥ 85
+
+---
+
+---
+# 🔴 E8 — CI/CD & DEPLOY BLUE-GREEN
+
+---
+
+## TASK-074 · Criar workflow GitHub Actions (pipeline completa)
 
 **Épico:** E8 — CI/CD  
 **Prioridade:** 🟠 P1  
@@ -1277,7 +1702,7 @@ Seção 9.2 (Pipeline completa)
 
 ---
 
-## TASK-048 · Criar Dockerfile multi-stage
+## TASK-075 · Criar Dockerfile multi-stage
 
 **Épico:** E8 — CI/CD  
 **Prioridade:** 🟠 P1  
@@ -1303,7 +1728,7 @@ Seção 9.2 (Step 9 do CI)
 
 ---
 
-## TASK-049 · Configurar Blue-Green Deployment com Readiness Probes
+## TASK-076 · Configurar Blue-Green Deployment com Readiness Probes
 
 **Épico:** E8 — CI/CD  
 **Prioridade:** 🟡 P2  
@@ -1329,7 +1754,7 @@ Seção 9.1
 
 ---
 
-## TASK-050 · Implementar migrations retrocompatíveis (expand-contract)
+## TASK-077 · Implementar migrations retrocompatíveis (expand-contract)
 
 **Épico:** E8 — CI/CD  
 **Prioridade:** 🟠 P1  
@@ -1353,7 +1778,7 @@ Seção 9.1 (Regra de compatibilidade de migrations)
 
 ---
 
-## TASK-051 · Configurar health checks granulares no Actuator
+## TASK-078 · Configurar health checks granulares no Actuator
 
 **Épico:** E8 — CI/CD  
 **Prioridade:** 🟠 P1  
@@ -1379,12 +1804,11 @@ Seção 6 (Health checks granulares)
 ---
 
 ---
-
-# 🟢 E9 — OBSERVABILIDADE & ALERTAS
+# 🔴 E9 — OBSERVABILIDADE & ALERTAS
 
 ---
 
-## TASK-052 · Configurar OpenTelemetry e logging estruturado JSON
+## TASK-079 · Configurar OpenTelemetry e logging estruturado JSON
 
 **Épico:** E9 — Observabilidade  
 **Prioridade:** 🟠 P1  
@@ -1409,7 +1833,7 @@ Seção 6 (Observabilidade), RNF-01
 
 ---
 
-## TASK-053 · Configurar dashboard Grafana base
+## TASK-080 · Configurar dashboard Grafana base
 
 **Épico:** E9 — Observabilidade  
 **Prioridade:** 🟢 P3  
@@ -1430,7 +1854,7 @@ Criar dashboard Grafana com os painéis essenciais para monitoramento operaciona
 
 ---
 
-## TASK-054 · Implementar endpoint de diagnóstico de integridade (API)
+## TASK-081 · Implementar endpoint de diagnóstico de integridade (API)
 
 **Épico:** E9 — Observabilidade  
 **Prioridade:** 🟡 P2  
@@ -1455,7 +1879,7 @@ RF-04 (AC-04.3)
 
 ---
 
-## TASK-055 · Criar documentação OpenAPI e Postman Collection
+## TASK-082 · Criar documentação OpenAPI e Postman Collection
 
 **Épico:** E9 — Observabilidade  
 **Prioridade:** 🟢 P3  
