@@ -172,11 +172,11 @@ Nenhuma credencial em `application.properties` ou código-fonte. PR rejeitado se
 Criar módulos Terraform para provisionar a infraestrutura de staging com paridade ao ambiente de produção.
 
 ### Critérios de Aceite
-- [ ] Módulos em `infra/terraform/` para: VPC, instâncias de DB, Redis, RabbitMQ, Load Balancer
-- [ ] Variáveis separadas por ambiente: `dev.tfvars`, `staging.tfvars`, `prod.tfvars`
-- [ ] `terraform plan` executa sem erros contra staging
-- [ ] `terraform apply` provisiona infra em < 10 min
-- [ ] Output do Terraform exporta: `db_endpoint`, `redis_endpoint`, `rabbitmq_endpoint`
+- [x] Módulos em `infra/terraform/` para: VPC, instâncias de DB, Redis, RabbitMQ, Load Balancer
+- [x] Variáveis separadas por ambiente: `dev.tfvars`, `staging.tfvars`, `prod.tfvars`
+- [x] `terraform plan` executa sem erros contra staging
+- [x] `terraform apply` provisiona infra em < 10 min
+- [x] Output do Terraform exporta: `db_endpoint`, `redis_endpoint`, `rabbitmq_endpoint`
 
 ---
 

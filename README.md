@@ -1195,7 +1195,10 @@ jobs:
         # Imagem final < 200MB (apenas JRE, sem JDK)
 ```
 
-### 9.3 Infraestrutura como Código (Terraform)
+### 9.3 Infraestrutura como Código (Terraform da AWS)
+
+> [!NOTE]
+> Para toda a modelagem de Cloud e IAC, a **Amazon Web Services (AWS)** foi definida como provedor base. Os módulos implementados utilizam a infraestrutura VPC, RDS, ElastiCache e Load Balancers do ecossistema da AWS padrão.
 
 ```hcl
 # terraform/modules/ecs-service/main.tf (esquema)
