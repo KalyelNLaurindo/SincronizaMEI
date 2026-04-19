@@ -73,8 +73,11 @@ Seção 10 — Estrutura do Código
 
 ### O que fazer
 Criar `docker-compose.yml` com todos os serviços de infraestrutura necessários para rodar o projeto localmente.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [x] `docker-compose.yml` na raiz com os seguintes serviços:
   - `postgres:16` na porta `5432`, banco `sincronizamei_dev`, usuário `app_user`
   - `redis:7.2` na porta `6379`
@@ -98,8 +101,11 @@ Criar `docker-compose.yml` com todos os serviços de infraestrutura necessários
 
 ### O que fazer
 Criar o projeto Spring Boot 3 com Java 21 via Spring Initializr com todas as dependências base.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [x] `pom.xml` com Java 21, Spring Boot 3.x, dependências:
   - `spring-boot-starter-web`
   - `spring-boot-starter-data-jpa`
@@ -127,8 +133,11 @@ Criar o projeto Spring Boot 3 com Java 21 via Spring Initializr com todas as dep
 
 ### O que fazer
 Criar o projeto React 18 com Vite, Tailwind CSS e dependências necessárias.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [x] Projeto criado com `npm create vite@latest frontend -- --template react-ts`
 - [x] Tailwind CSS 3.4 configurado e funcional
 - [x] Dependências instaladas: `react-query`, `zustand`, `react-hook-form`, `zod`, `axios`
@@ -147,8 +156,11 @@ Criar o projeto React 18 com Vite, Tailwind CSS e dependências necessárias.
 
 ### O que fazer
 Configurar o Vault para injeção de segredos sensíveis (chave AES, senhas de banco, tokens de gateway).
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [x] Vault adicionado ao `docker-compose.yml` na porta `8200` (modo dev para local)
 - [x] `spring-cloud-starter-vault-config` adicionado ao `pom.xml`
 - [x] `bootstrap.yml` configurado para ler de `secret/sincronizamei`
@@ -170,8 +182,11 @@ Nenhuma credencial em `application.properties` ou código-fonte. PR rejeitado se
 
 ### O que fazer
 Criar módulos Terraform para provisionar a infraestrutura de staging com paridade ao ambiente de produção.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [x] Módulos em `infra/terraform/` para: VPC, instâncias de DB, Redis, RabbitMQ, Load Balancer
 - [x] Variáveis separadas por ambiente: `dev.tfvars`, `staging.tfvars`, `prod.tfvars`
 - [x] `terraform plan` executa sem erros contra staging
@@ -195,8 +210,11 @@ Criar módulos Terraform para provisionar a infraestrutura de staging com parida
 
 ### O que fazer
 Criar as migrations Flyway para o schema bitemporal das tabelas core dos três bounded contexts.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Migration `V1__create_schema_financeiro.sql` criada em `db/migrations/`
 - [ ] Migration `V2__create_schema_estoque.sql`
 - [ ] Migration `V3__create_schema_rh.sql`
@@ -225,8 +243,11 @@ Proibido usar H2. Usar PostgreSQL 16 real via Testcontainers para validar.
 
 ### O que fazer
 Criar o trigger `trg_bloquear_delete` em todas as tabelas core para implementar a imutabilidade de dados por design.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Migration `V4__create_trigger_block_delete.sql` criada
 - [ ] Trigger aplicado nas tabelas: `financeiro.ordens`, `financeiro.lancamentos`, `estoque.movimentacoes`, `rh.registros`
 - [ ] **Teste SQL:** `DELETE FROM financeiro.ordens WHERE id = 'qualquer-id'` retorna erro com mensagem descritiva: `"DELETE físico proibido. Use soft-delete bitemporal."`
@@ -246,8 +267,11 @@ RF-04 (AC-04.1), RNF-07, ADR-04
 
 ### O que fazer
 Criar a procedure central de reconciliação que implementa a tolerância de R$0,50 e o versionamento bitemporal automático.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Arquivo `db/procedures/sp_reconciliar_ordem.sql` criado
 - [ ] Migration `V5__create_sp_reconciliar_ordem.sql` aplica via Flyway com `CREATE OR REPLACE`
 - [ ] Lógica implementada:
@@ -271,8 +295,11 @@ RF-01 (AC-01.1, AC-01.2, AC-01.3)
 
 ### O que fazer
 Criar função de diagnóstico point-in-time para suporte de produção.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] `db/procedures/fn_check_integrity.sql` criado
 - [ ] Função aceita `idempotency_key UUID` como parâmetro
 - [ ] Retorna: todas as versões históricas da ordem, campo `em_limbo BOOLEAN`, `minutos_limbo INTEGER`
@@ -293,8 +320,11 @@ RF-04 (AC-04.3), RP-05
 
 ### O que fazer
 Criar função de consulta histórica para auditoria fiscal — "como estava o sistema em tal data?".
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] `db/procedures/fn_estado_bitemporal.sql` criado
 - [ ] Assinatura: `fn_estado_bitemporal(p_id UUID, p_as_of TIMESTAMPTZ)`
 - [ ] Retorna o estado da ordem **exatamente como estava** na data informada
@@ -315,8 +345,11 @@ RF-05 (AC-05.1, AC-05.2)
 
 ### O que fazer
 Garantir que nenhuma query de listagem use `OFFSET` — implementar paginação por cursor em todas as listagens.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Queries de listagem usam padrão: `WHERE id > :cursor ORDER BY id LIMIT :size`
 - [ ] Parâmetros de response incluem: `nextCursor`, `hasMore`
 - [ ] Testado com 10.000+ registros sem OOM ou timeout
@@ -336,8 +369,11 @@ RP-03
 
 ### O que fazer
 Criar script SQL obrigatório para higienização de dados PII antes de restaurar dumps de produção em staging.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] `db/scripts/anonymize_dump.sql` criado
 - [ ] Script mascara: CPF, e-mail, conta bancária, telefone
 - [ ] CPF substituído por formato `000.000.000-XX` onde XX = últimos 2 dígitos reais (mantém unicidade)
@@ -365,13 +401,10 @@ ADR-05, RNF-06
 ### O que fazer
 Implementar o interceptor de idempotência que protege todos os endpoints POST/PUT de processamento duplicado.
 
-### Critérios de Aceite
-- [ ] Classe `IdempotencyInterceptor` implementa `HandlerInterceptor`
-- [ ] Header `X-Idempotency-Key` ausente em POST/PUT → `HTTP 400` com mensagem descritiva
-- [ ] Chave nova: processa normalmente, salva response no Redis com `SET key response NX EX 86400`
-- [ ] Chave existente (dentro de 24h): retorna `HTTP 409` com response original cacheado
-- [ ] Duas requisições simultâneas com mesma chave: apenas uma persiste (atomicidade garantida pelo `NX`)
-- [ ] Testes de integração cobrindo os 3 ACs do RF-02
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED – Testes]** Escrever os testes de integração do `IdempotencyInterceptor` simulando requisições duplicadas. O código deve falhar por falta da implementação.
+- [ ] **[GREEN – Lógica]** Implementar o HandlerInterceptor validando o `X-Idempotency-Key` (400), chave duplicada (409) e race conditions (`NX EX 86400`). Fazer os testes passarem perfeitamente.
+- [ ] **[REFACTOR – Clean Code]** Isolar as dependências usando POO, movendo o acesso ao Redis para uma camada de serviço abstrata injetada no Interceptor, em respeito aos Design Patterns.
 
 ### Referência no README
 RF-02 (AC-02.1, AC-02.2, AC-02.3), ADR-03
@@ -388,13 +421,10 @@ RF-02 (AC-02.1, AC-02.2, AC-02.3), ADR-03
 ### O que fazer
 Criar as entidades JPA, repositórios e serviços do módulo financeiro respeitando o bounded context.
 
-### Critérios de Aceite
-- [ ] Entidades em `com.sincronizamei.financeiro.domain`: `Ordem`, `Lancamento`
-- [ ] Repositórios usam `EntityManager.createNativeQuery()` para operações bitemporais — **nunca** `repository.save()` em entidades bitemporais
-- [ ] Enum `OrdemStatus` com todos os estados da máquina de estados (Apêndice B do README)
-- [ ] Nenhum import de classes do pacote `estoque` ou `rh` (violação detectada por ArchUnit)
-- [ ] Comunicação com outros módulos apenas via `ApplicationEventPublisher`
-- [ ] Teste unitário para cada transição de estado do enum
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED – Testes]** Criar o projeto de testes para transições de estado do enum `OrdemStatus`. Validar os relacionamentos de models sem o banco real estar pronto na View.
+- [ ] **[GREEN – Lógica MVC]** Mapear as Entidades da Camada Model (`Ordem`, `Lancamento`) em `com.sincronizamei.financeiro.domain`. Realizar as mutações por repositórios não-bitemporais limitados a NativeQuery.
+- [ ] **[REFACTOR – POO]** Aplicar polimorfismo nas transações da máquina de estados, evitar repetição de if/elses e isolar a camada de Eventos. Proibido acoplamento de outros domínios via ArchUnit.
 
 ### Referência no README
 Apêndice B — Máquina de Estados, ADR-01, Restrição #3
@@ -410,8 +440,11 @@ Apêndice B — Máquina de Estados, ADR-01, Restrição #3
 
 ### O que fazer
 Criar as entidades, repositórios e serviços do módulo de estoque.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Entidades em `com.sincronizamei.estoque.domain`: `Produto`, `MovimentacaoEstoque`
 - [ ] Capacidade para catálogo de 500k itens (índices corretos nas migrations)
 - [ ] Movimentação de estoque usa stored procedure para atomicidade
@@ -432,8 +465,11 @@ RNF-03, ADR-01
 
 ### O que fazer
 Implementar o endpoint de faturamento seguindo o protocolo de resiliência documentado no README.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] `POST /api/v1/faturamento/ordens` implementado
 - [ ] Response síncrono retorna `HTTP 202 Accepted` com `Location` header
 - [ ] Body de resposta contém: `ordemId`, `status: "PROCESSAMENTO_PENDENTE"`, `estimatedConciliationAt`, `_links`
@@ -455,8 +491,11 @@ Seção 8.3, RF-01, RNF-01 (p95 < 800ms)
 
 ### O que fazer
 Implementar o Anti-Corruption Layer para comunicação com o gateway de pagamento externo.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] `GatewayPagamentoAdapter` implementa interface `GatewayPagamentoPort`
 - [ ] Retry configurado: 4 tentativas, backoff exponencial 1s → 2s → 4s → 8s
 - [ ] Circuit Breaker configurado com Resilience4j: abre após 50% de falha em 10 chamadas
@@ -478,8 +517,11 @@ Seção 7.3, Seção 8.1 (HTTP 503)
 
 ### O que fazer
 Implementar o sistema de hooks que permite customizações isoladas sem modificar o core.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] `HookRegistry` centraliza registro de listeners de eventos de domínio
 - [ ] Plugin sem `fallback` definido → `HookRegistry` rejeita com erro descritivo no startup
 - [ ] Exceção em handler capturada + logada com `correlation_id` — **Core não interrompe**
@@ -501,8 +543,11 @@ RF-03 (AC-03.1, AC-03.2, AC-03.3), ADR-07
 
 ### O que fazer
 Implementar o endpoint de recebimento de callbacks do gateway de pagamento com validação de assinatura.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] `POST /api/v1/webhooks/gateway` implementado
 - [ ] Validação `HMAC-SHA256` do body com o segredo configurado — assinatura inválida → `HTTP 401`
 - [ ] Replay de webhook > 5 minutos → `HTTP 401` (timestamp no header `X-Signature`)
@@ -524,8 +569,11 @@ Seção 7.4, Seção 8.2 (X-Signature)
 
 ### O que fazer
 Implementar handler global de exceções que retorna erros no formato `application/problem+json`.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] `@ControllerAdvice` global implementado
 - [ ] Todos os erros retornam `Content-Type: application/problem+json`
 - [ ] Campos obrigatórios: `type`, `title`, `status`, `detail`, `instance`, `correlationId`
@@ -546,8 +594,11 @@ Seção 7.2
 
 ### O que fazer
 Implementar rate limiting por `clientId` para proteger o core ERP contra burst de um único cliente.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Rate limiting configurado via Resilience4j ou Bucket4j
 - [ ] Exceder limite → `HTTP 429` com header `Retry-After: {seconds}`
 - [ ] Limite configurável por ambiente via `application.yml`
@@ -568,8 +619,11 @@ Seção 8.1 (HTTP 429)
 
 ### O que fazer
 Implementar Server-Sent Events para notificação push quando o status de uma ordem muda.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] `GET /api/v1/ordens/{id}/events` implementado com SSE
 - [ ] Evento emitido quando status muda (PROCESSANDO → CONCILIADO, etc.)
 - [ ] Conexão encerra automaticamente em estados terminais (`CONCILIADO`, `REJEITADO`, `ESTORNADO`)
@@ -596,8 +650,11 @@ Seção 8.1 (Nota sobre HTTP 202)
 
 ### O que fazer
 Implementar o encriptador AES-256-GCM para dados sensíveis (CPF, conta bancária) antes da persistência.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Classe `AesGcmEncryptor` implementada conforme exemplo da Seção 4.4 do README
 - [ ] IV de 96 bits (12 bytes) gerado aleatoriamente por operação
 - [ ] Chave injetada via `${AES_SECRET_KEY}` do Vault — **nunca** hardcoded
@@ -619,8 +676,11 @@ ADR-05, RNF-05
 
 ### O que fazer
 Implementar a anotação `@Masked` que mascara dados PII automaticamente na serialização de logs.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Anotação `@Masked` criada em `com.sincronizamei.shared.logging`
 - [ ] Serializer customizado do Jackson substitui valor por `***-[últimos 4 dígitos]`
 - [ ] Aplicada em `ClienteDTO`: campos `cpf`, `contaBancaria`, `email`
@@ -642,8 +702,11 @@ ADR-05, RNF-06, Seção 4.4
 
 ### O que fazer
 Implementar autenticação JWT com suporte a dois perfis de usuário com permissões distintas.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] JWT assinado com RS256 (chave privada via Vault)
 - [ ] Claims obrigatórias: `sub` (userId), `role` (MEI | CONTROLLER), `iat`, `exp`
 - [ ] Sessão armazenada no Redis para revogação imediata (não JWT stateless puro)
@@ -665,8 +728,11 @@ ADR-05, Seção 8.2 (Authorization header)
 
 ### O que fazer
 Garantir que o `X-Correlation-ID` seja propagado de ponta a ponta: PWA → Backend → RabbitMQ → PostgreSQL.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Filter Spring adiciona `X-Correlation-ID` ao `MDC` (Mapped Diagnostic Context) do SLF4J
 - [ ] Se ausente na requisição, UUID é gerado pelo servidor e incluído na response
 - [ ] `correlationId` propagado no header de mensagens RabbitMQ (MessageProperties)
@@ -687,8 +753,11 @@ Seção 8.2, Garantia de Rastreabilidade Distribuída (Seção 1)
 
 ### O que fazer
 Garantir que a validação de assinatura de webhooks seja robusta contra replay attacks.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Validação HMAC-SHA256: `HMAC(body, secret)` comparado com `X-Signature` header usando `MessageDigest.isEqual()` (constant-time para evitar timing attack)
 - [ ] Timestamp extraído da assinatura — webhooks com timestamp > 5 minutos → `HTTP 401`
 - [ ] Segredo do gateway injetado via Vault
@@ -715,8 +784,11 @@ Seção 8.2 (X-Signature), Seção 7.4
 
 ### O que fazer
 Configurar toda a topologia RabbitMQ: exchanges, filas de processamento, filas de reconciliação e Dead Letter Queues.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Exchange `financeiro.exchange` (direct)
 - [ ] Fila `financeiro.processamento` com DLX configurado para `financeiro.dlq`
 - [ ] Fila `financeiro.reconciliacao` para o worker de 15 min
@@ -738,8 +810,11 @@ ADR-02, RF-07 (AC-07.3)
 
 ### O que fazer
 Implementar o worker que executa a cada 15 minutos e reconcilia ordens em limbo chamando `sp_reconciliar_ordem`.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Job Quartz configurado com cron `*/15 * * * *` (a cada 15 min)
 - [ ] Worker busca ordens com status `LIMBO` usando cursor-based pagination
 - [ ] Para cada ordem: chama `sp_reconciliar_ordem` via `EntityManager`
@@ -762,8 +837,11 @@ Garantia de Consistência Eventual (Seção 1), RF-01 (AC-01.1)
 
 ### O que fazer
 Implementar o consumidor que monitora a DLQ e dispara alertas quando ultrapassa 100 mensagens.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Worker verifica tamanho da DLQ a cada 5 minutos via Management API do RabbitMQ
 - [ ] DLQ > 100 mensagens → alerta P1 disparado via canal configurado (e-mail / Slack / webhook)
 - [ ] Canal de alerta configurável via `application.yml` sem recompilar
@@ -784,8 +862,11 @@ RF-07 (AC-07.3)
 
 ### O que fazer
 Implementar alerta proativo para ordens que ficam mais de 30 minutos em `PROCESSAMENTO_PENDENTE`.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Query periódica detecta ordens com status `PROCESSAMENTO_PENDENTE` há > 30 minutos
 - [ ] Alerta P2 enviado para operações
 - [ ] Mensagem humanizada na UI: *"Seu pagamento está sendo processado. Aguarde até 15 minutos."*
@@ -806,8 +887,11 @@ RF-07 (AC-07.1, AC-07.2)
 
 ### O que fazer
 Implementar conversão dinâmica de moeda com snapshot diário de câmbio, sem recálculo retroativo.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Campo `moeda CHAR(3)` e `valor_brl_na_data NUMERIC(15,4)` já existem no schema (confirmar na migration)
 - [ ] Job diário busca taxa de câmbio de API externa e persiste snapshot em `financeiro.cotacoes`
 - [ ] Ao criar ordem em USD: persiste valor USD + equivalente BRL na data da transação
@@ -834,8 +918,11 @@ RF-06 (AC-06.1, AC-06.2), Changelog [Unreleased]
 
 ### O que fazer
 Configurar a estrutura base do frontend com gerenciamento de estado, cache de queries e tratamento de erros.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] `QueryClient` configurado com retry: 3x, stale time: 30s
 - [ ] `Zustand` store com slice: `{ modoEspecialista: boolean, correlationId: string }`
 - [ ] `ErrorBoundary` envolvendo cada painel de dashboard — erro em um painel não derruba a página
@@ -857,8 +944,11 @@ Seção 4.5, Restrição #2
 
 ### O que fazer
 Implementar a interface dual que adapta o contexto da UI ao perfil do usuário autenticado.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Modo MEI: foco em faturamento rápido, ações simples, sem dados de auditoria
 - [ ] Modo CONTROLLER: densidade analítica, acesso a histórico bitemporal, divergências
 - [ ] Toggle de modo persiste em `sessionStorage` via Zustand
@@ -879,8 +969,11 @@ Seção 1 (Experiência Dual-UX), Seção 4.5
 
 ### O que fazer
 Implementar o formulário de criação de ordem com geração automática de `X-Idempotency-Key`.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] UUID v4 gerado no frontend no momento de abertura do formulário
 - [ ] UUID enviado no header `X-Idempotency-Key` a cada tentativa
 - [ ] Resubmit do formulário: mesmo UUID reenviado → `HTTP 409` tratado como sucesso (order já criada)
@@ -902,8 +995,11 @@ Seção 8.3, RF-02
 
 ### O que fazer
 Implementar o componente de status do Circuit Breaker que informa o usuário quando o gateway está indisponível.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Componente `CircuitBreakerStatus` visível no dashboard
 - [ ] Estados: CLOSED (verde), OPEN (vermelho), HALF_OPEN (amarelo)
 - [ ] Quando OPEN: exibe mensagem *"Gateway temporariamente indisponível. Tentando novamente em X segundos."*
@@ -924,8 +1020,11 @@ Seção 4.5 (Indicador de Circuit Breaker)
 
 ### O que fazer
 Implementar a interface de consulta histórica que permite ao CONTROLLER consultar estados passados do sistema.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Date picker para seleção da data de consulta histórica
 - [ ] Chamada para `fn_estado_bitemporal(id, asOfDate)` via API
 - [ ] Exibe linha do tempo visual das versões do registro com `valid_from` e `system_init_tstz`
@@ -946,8 +1045,11 @@ RF-05, Apêndice A (Glossário: Tempo de Validade vs Tempo de Sistema)
 
 ### O que fazer
 Configurar o Service Worker e manifest para funcionamento offline parcial e instalabilidade.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] `manifest.json` com: `name`, `short_name`, `icons` (192px + 512px), `theme_color`, `display: standalone`
 - [ ] Service Worker com estratégia `NetworkFirst` para API calls, `CacheFirst` para assets estáticos
 - [ ] App instalável via browser (ícone de instalação exibido)
@@ -968,8 +1070,11 @@ Badges do README (PWA-Ready)
 
 ### O que fazer
 Garantir que a interface esteja em português e siga as diretrizes básicas de acessibilidade.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Todos os textos em pt-BR
 - [ ] `lang="pt-BR"` no HTML
 - [ ] Inputs com `aria-label` ou `<label>` associado
@@ -994,8 +1099,11 @@ Garantir que a interface esteja em português e siga as diretrizes básicas de a
 
 ### O que fazer
 Configurar o ambiente de testes de integração com Testcontainers usando PostgreSQL 16 real.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] `@Testcontainers` configurado na classe base de testes de integração
 - [ ] Container `postgres:16-alpine` iniciado para todos os testes com Procedures/triggers
 - [ ] Flyway aplica todas as migrations no container de teste antes da execução
@@ -1017,8 +1125,11 @@ Restrição #4, ADR-06
 
 ### O que fazer
 Implementar os testes de arquitetura que garantem que os bounded contexts não se violam.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] `ModuleBoundaryTest` implementado com ArchUnit
 - [ ] Regra: nenhuma classe em `financeiro.*` pode importar classes de `estoque.*` ou `rh.*`
 - [ ] Regra: comunicação cross-módulo só via `ApplicationEvent`
@@ -1040,8 +1151,11 @@ ADR-01, Seção 9.2 (Step 4 do CI/CD)
 
 ### O que fazer
 Implementar os testes de integração end-to-end cobrindo o fluxo completo de uma ordem do início ao fim.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Teste: criar ordem → status `PROCESSAMENTO_PENDENTE`
 - [ ] Teste: simular callback do gateway → worker processa → status `CONCILIADO`
 - [ ] Teste: simular divergência > R$0,50 → status `DIVERGENTE_AUDITORIA` + registro em `auditoria.alertas`
@@ -1063,8 +1177,11 @@ Seção 4 (Plano de Testes), RNF (Cobertura ≥ 90%)
 
 ### O que fazer
 Configurar JaCoCo para mensurar cobertura e bloquear o build se ficar abaixo do mínimo.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Plugin JaCoCo configurado no `pom.xml`
 - [ ] Gate de cobertura: `mvn verify` falha se cobertura geral < 90%
 - [ ] Gate de cobertura: falha se pacotes críticos (`financeiro.service`, `financeiro.worker`) < 95%
@@ -1085,8 +1202,11 @@ Badge de cobertura ≥90%, Seção 9.2 (Step 2 do CI)
 
 ### O que fazer
 Criar o script k6 de smoke test para validar performance antes de cada deploy.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Script em `scripts/k6/smoke-test.js`
 - [ ] Cenário: 50 VUs, 60 segundos, endpoint `POST /api/v1/faturamento/ordens`
 - [ ] Gate: falha se `p95 > 800ms`
@@ -1108,8 +1228,11 @@ RNF-01, Seção 9.2 (Step 8 do CI)
 
 ### O que fazer
 Configurar as ferramentas de segurança estática na pipeline de CI para garantir zero vulnerabilidades críticas.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Trivy configurado: `trivy fs --severity HIGH,CRITICAL --exit-code 1 .`
 - [ ] OWASP Dependency Check: `mvn org.owasp:dependency-check-maven:check`
 - [ ] TruffleHog: `trufflehog git file://. --since-commit HEAD~1 --fail`
@@ -1137,8 +1260,11 @@ Badge SAST-zero-critical, Seção 9.2 (Steps 5 e 6)
 
 ### O que fazer
 Criar o workflow completo do GitHub Actions com todos os 9 quality gates documentados no README.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Arquivo `.github/workflows/ci.yml` criado
 - [ ] Steps em ordem: Build → Unit Tests (gate ≥90%) → Integration Tests → ArchUnit → SAST/CVE → Secret Scan → Flyway Validate → k6 Smoke → Docker Build
 - [ ] Falha em qualquer step bloqueia o merge
@@ -1160,8 +1286,11 @@ Seção 9.2 (Pipeline completa)
 
 ### O que fazer
 Criar o Dockerfile multi-stage otimizado para produção.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Stage 1 (build): `eclipse-temurin:21-jdk` — compila o JAR
 - [ ] Stage 2 (runtime): `eclipse-temurin:21-jre-alpine` — apenas o JRE
 - [ ] Usuário não-root criado e usado no stage de runtime
@@ -1183,8 +1312,11 @@ Seção 9.2 (Step 9 do CI)
 
 ### O que fazer
 Implementar a estratégia de deploy Blue-Green com switch controlado de tráfego.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Readiness probe: `/actuator/health/readiness` retorna 200 quando DB ✓ + Redis ✓ + RabbitMQ ✓ + Flyway ✓
 - [ ] Liveness probe: `/actuator/health/liveness`
 - [ ] Pipeline de promoção implementa os 7 passos documentados na Seção 9.1
@@ -1206,8 +1338,11 @@ Seção 9.1
 
 ### O que fazer
 Documentar e implementar o processo de expand-contract para mudanças destrutivas de schema.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] `MIGRATIONS-GUIDE.md` criado documentando o padrão expand-contract
 - [ ] Checklist de PR para migrations: [ ] NULLABLE ou DEFAULT? [ ] Sem DROP COLUMN no release? [ ] Sem NOT NULL sem expand-contract?
 - [ ] Migration de exemplo demonstrando rename de coluna via expand-contract
@@ -1227,8 +1362,11 @@ Seção 9.1 (Regra de compatibilidade de migrations)
 
 ### O que fazer
 Configurar health checks individuais para cada dependência crítica.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] `GET /actuator/health` retorna status aggregado com detalhes de cada componente
 - [ ] Componentes monitorados: `db` (PostgreSQL), `redis`, `rabbit` (RabbitMQ DLQ), `gatewayPix` (custom)
 - [ ] Health check do Gateway PIX: verifica se o último ping teve sucesso em < 5 min
@@ -1255,8 +1393,11 @@ Seção 6 (Health checks granulares)
 
 ### O que fazer
 Configurar instrumentação completa com OpenTelemetry para métricas, traces e logs estruturados.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] `micrometer-registry-otlp` configurado exportando para coletor OTLP
 - [ ] Todo log em formato JSON estruturado: `{timestamp, level, message, traceId, correlationId, spanId}`
 - [ ] Métricas expostas: `http.server.request.duration` (histograma), `orders.created.total`, `reconciliation.duration`
@@ -1277,8 +1418,11 @@ Seção 6 (Observabilidade), RNF-01
 
 ### O que fazer
 Criar dashboard Grafana com os painéis essenciais para monitoramento operacional.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] Dashboard com painéis: Latência p95 (último 1h), Taxa de Erros (%), Ordens por Status, DLQ size, Circuit Breaker status
 - [ ] Alertas configurados: p95 > 800ms, error_rate > 1%, DLQ > 100 mensagens
 - [ ] Dashboard exportado como JSON em `infra/grafana/dashboards/`
@@ -1295,8 +1439,11 @@ Criar dashboard Grafana com os painéis essenciais para monitoramento operaciona
 
 ### O que fazer
 Expor a função `fn_check_integrity` via API REST para uso pelo time de suporte sem acesso direto ao banco.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] `GET /api/v1/auditoria/ordens/{idempotencyKey}/integrity` implementado
 - [ ] Requer role CONTROLLER
 - [ ] Chama `fn_check_integrity(idempotencyKey)` e retorna resultado como JSON
@@ -1317,8 +1464,11 @@ RF-04 (AC-04.3)
 
 ### O que fazer
 Gerar documentação completa da API e disponibilizar collection do Postman com exemplos funcionais.
-
-### Critérios de Aceite
+### Critérios de Aceite (TDD Lifecycle)
+- [ ] **[RED - Testes]** Escrever os testes falhando (Unit/E2E) baseados nas Regras de Negócio abaixo.
+- [ ] **[GREEN - Lógica]** Implementar a classe/componente correspondente no padrão MVC até os testes passarem.
+- [ ] **[REFACTOR - POO/Clean Code]** Refatorar aplicando Design Patterns aplicáveis, protegendo responsabilidades e DRY.
+#### Regras de Negócio (a serem validadas nos testes):
 - [ ] `springdoc-openapi-starter-webmvc-ui` adicionado ao `pom.xml`
 - [ ] Swagger UI disponível em `/api/docs` em ambientes não-prod
 - [ ] Todos os endpoints documentados com: descrição, parâmetros, responses (200/201/202/400/401/403/409/422/429/503)

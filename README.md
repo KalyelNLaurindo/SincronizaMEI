@@ -72,7 +72,8 @@ O **SincronizaMEI** inverte o paradigma da passividade. Em vez de "esperar que a
 
 ### Pilares de Engenharia & Arquitetura (Senior-Level)
 
-- **Monólito Modular & Bounded Contexts:** Desenvolvido com uma separação clara entre as fronteiras de `Financeiro`, `Estoque` e `Vendas`. Essa abordagem garante baixo acoplamento e alta coesão, permitindo escalabilidade futura para microsserviços sem a necessidade de reescrita.
+- **Arquitetura MVC em Monólito & Bounded Contexts:** Desenvolvido guiado pela Programação Orientada a Objetos (POO), baseando-se no clássico MVC (Model-View-Controller) encapsulado em módulos de domínio (`Financeiro`, `Estoque` e `Vendas`). O uso rigoroso de princípios **Clean Code** e **Design Patterns** (ex: *Strategy*, *Factory*) garante um baixo acoplamento interno e facilidade extrema de evolução conceitual.
+- **TDD (Test-Driven Development) como Lei:** Todo o roadmap técnico obedece o lifecycle RED-GREEN-REFACTOR. A automação das suítes de testes sempre antecede a implementação do controlador ou regra de negócio, sem abrir exceções.
 - **Alta Performance com Java 21 (Virtual Threads):** Os motores de reconciliação utilizam *Project Loom* para gerenciar milhares de tarefas concorrentes de I/O com custo mínimo de memória, garantindo que o sistema escale horizontalmente de forma eficiente.
 - **Persistência Bitemporal Estruturada:** Implementada via PostgreSQL `Range Types` e `Exclusion Constraints`, permitindo que o sistema reconstrua qualquer estado histórico com precisão de auditoria (Tempo de Fato vs. Tempo de Registro).
 - **Idempotência a Nível de Infraestrutura:** Proteção contra duplicidade de transações e race conditions implementada via Redis `SET NX EX` no estágio inicial da requisição.
@@ -348,22 +349,23 @@ Esta matriz vincula os requisitos críticos de negócio às decisões técnicas,
 | **LGPD / PII**               | Exposição de dados sensíveis em logs/DB           | Crítico  | **ADR-05**: AES-256-GCM + Mascaramento Dinâmico     |
 | **Versionamento de Schema**  | Inconsistência de DDL entre ambientes             | Alto     | **ADR-06**: Flyway com Rollback Testado             |
 | **Customização (ERP)**       | Regras de cliente quebram o Core                  | Médio    | **ADR-07**: Sistema de Hooks Isolados               |
-| **Escalabilidade**           | Monólito acoplado dificulta extração futura       | Médio    | **ADR-01**: Monólito Modular com Bounded Contexts   |
+| **Escalabilidade**           | Monólito acoplado dificulta extração futura       | Médio    | **ADR-01**: Arquitetura MVC em Monólito com Bounded Contexts |
 
 ---
 
 ## 2. Architecture Decision Records (ADRs)
 
-### ADR-01 — Monólito Modular em Java 17 (KISS/YAGNI)
+### ADR-01 — Arquitetura MVC em Monólito com Padrões Ágeis (POO, TDD, Clean Code)
 
 - **Status:** Aceito
-- **Contexto:** Necessidade de alta performance (500k itens, 20k clientes) sem a sobrecarga operacional de microsserviços. A equipe é pequena e o domínio ainda está sendo refinado.
-- **Decisão:** Backend em **Java 17 (Spring Boot 3)** organizado em módulos de domínio (`financeiro`, `estoque`, `rh`). Comunicação interna via `ApplicationEventPublisher`; comunicação externa via REST com ACL (Anti-Corruption Layer).
+- **Contexto:** Necessidade de alta performance sem a sobrecarga de gerenciar dezenas de microsserviços precocemente. É vital manter o nível do código legível, testado e estruturado a padrões clássicos de mercado (POO e MVC).
+- **Decisão:** Backend em **Java 21 (Spring Boot 3)** organizado no padrão MVC. Models de domínio (`financeiro`, `estoque`), Views providas por DTOs REST, e Controllers dedicados baseados na **Programação Orientada a Objetos**. 
+A engenharia é puramente **TDD First** (RED-GREEN-REFACTOR), e a inserção indiscriminada de lógica nos arquivos é proibida pelo selo do **Clean Code** (buscando usar padrões consolidados de GoF como Facades, Factory, e Strategy).
 - **Consequências:**
-  - ✅ Deploy único, debugging simplificado, transações ACID entre módulos.
-  - ✅ Separação lógica permite extração futura para microsserviços sem reescrita.
-  - ⚠️ Exige disciplina de equipe para não criar acoplamento entre os pacotes de domínio.
-- **Critério de Revisão:** Reavaliar para microsserviços se qualquer módulo exceder 50k LOC ou se times independentes assumirem domínios distintos.
+  - ✅ Coverage altíssimo nativo pelo TDD e isolamento testável proporcionado pelos Padrões de Projeto.
+  - ✅ Deploy único MVC com debugging simplificado.
+  - ⚠️ Exige forte disciplina de POO — evitar os "God Objects" em controllers longos.
+- **Critério de Revisão:** Reavaliar para microsserviços se o monolito exceder 100k LOC.
 
 ---
 
