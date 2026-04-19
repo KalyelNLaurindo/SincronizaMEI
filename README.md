@@ -1888,10 +1888,6 @@ Para contribuições de maior impacto (novos módulos, mudanças arquiteturais, 
 
 ---
 
-*Construído com ❤️ por Kalyel Nunes Laurindo*
-
----
-
 *Construído com ❤️ e obsessão por integridade financeira por Kalyel Nunes Laurindo*
 
 *"O código que lida com dinheiro de pessoas reais não tem direito a ser casual."*
