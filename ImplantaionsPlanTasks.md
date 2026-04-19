@@ -149,12 +149,12 @@ Criar o projeto React 18 com Vite, Tailwind CSS e dependências necessárias.
 Configurar o Vault para injeção de segredos sensíveis (chave AES, senhas de banco, tokens de gateway).
 
 ### Critérios de Aceite
-- [ ] Vault adicionado ao `docker-compose.yml` na porta `8200` (modo dev para local)
-- [ ] `spring-cloud-starter-vault-config` adicionado ao `pom.xml`
-- [ ] `bootstrap.yml` configurado para ler de `secret/sincronizamei`
-- [ ] Segredos mapeados: `AES_SECRET_KEY`, `POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `RABBITMQ_PASSWORD`
-- [ ] `AES_SECRET_KEY` tem pelo menos 32 bytes aleatórios
-- [ ] **Teste:** iniciar Spring Boot — nenhum segredo aparece no log de startup
+- [x] Vault adicionado ao `docker-compose.yml` na porta `8200` (modo dev para local)
+- [x] `spring-cloud-starter-vault-config` adicionado ao `pom.xml`
+- [x] `bootstrap.yml` configurado para ler de `secret/sincronizamei`
+- [x] Segredos mapeados: `AES_SECRET_KEY`, `POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `RABBITMQ_PASSWORD`
+- [x] `AES_SECRET_KEY` tem pelo menos 32 bytes aleatórios
+- [x] **Teste:** iniciar Spring Boot — nenhum segredo aparece no log de startup
 
 ### ⚠️ Restrição Inegociável (ADR-05)
 Nenhuma credencial em `application.properties` ou código-fonte. PR rejeitado se encontrado.

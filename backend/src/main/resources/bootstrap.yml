@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: sincronizamei
+
+  cloud:
+    vault:
+      host: ${VAULT_HOST:localhost}
+      port: ${VAULT_PORT:8200}
+      scheme: http
+      authentication: TOKEN
+      token: ${VAULT_TOKEN:root}
+      kv:
+        enabled: true
+        backend: secret
+        default-context: sincronizamei
+        application-name: sincronizamei
+        profiles: dev
