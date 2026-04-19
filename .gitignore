@@ -1,0 +1,49 @@
+# Repositório de Raiz - Ignore
+node_modules/
+dist/
+
+# Java / Spring Boot
+target/
+*.jar
+*.war
+*.ear
+*.class
+.mvn/
+mvnw
+mvnw.cmd
+.springBeans
+
+# Frontend (Vite)
+frontend/dist/
+frontend/node_modules/
+frontend/.eslintcache
+frontend/tsconfig.tsbuildinfo
+
+# IDE / Editores
+.idea/
+.vscode/
+*.swp
+*.swo
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment Keys e Vaults locais
+.env
+.env.*
+!.env.example
+
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+
+# Logs
+*.log
