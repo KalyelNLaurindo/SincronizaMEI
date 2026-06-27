@@ -251,29 +251,35 @@ O **SincronizaMEI** inverte o paradigma da passividade. Em vez de "esperar que a
 
 ```mermaid
 stateDiagram-v2
-    direction LR
+    direction TB
 
-    [*] --> Criada : POST /ordens (idempotency key gerada)
-    Criada --> Enfileirada : Aceita na API (HTTP 202)\nPublicada no RabbitMQ
+    state "Transient States (In-Flight / RabbitMQ)" as Transient {
+        direction LR
+        Enfileirada --> Processando : Worker consumes from queue\nand calls Gateway
+        Processando --> ErroTecnico : Gateway Timeout / HTTP 5xx
+        ErroTecnico --> Processando : Automatic Retry\n(Exp Backoff - max 3x)
+    }
 
-    Enfileirada --> Processando : Worker consome da fila\nEnvia para Gateway Externo
+    state "Persisted Database States (PostgreSQL Columns)" as Persisted {
+        direction TB
+        state PROCESSAMENTO_PENDENTE {
+            direction LR
+            Criada --> Limbo : Retry limit exhausted\n(> 15 min SLA)
+            Limbo --> Reconciliando : Scheduled reconciliation worker scans
+        }
+        PROCESSAMENTO_PENDENTE --> CONCILIADO : Reconciled (Diff <= R$ 0.50)
+        PROCESSAMENTO_PENDENTE --> DIVERGENTE_AUDITORIA : Audit Alert (Diff > R$ 0.50)
+        PROCESSAMENTO_PENDENTE --> REJEITADA : Insufficient funds / Validation error
+        
+        DIVERGENTE_AUDITORIA --> CONCILIADO : Controller Manual Approval
+    }
 
-    Processando --> ErroTecnico : Timeout / HTTP 5xx do Gateway
-    Processando --> Rejeitada : Saldo insuficiente\nRegra de negócio violada
-    Processando --> PendenteConciliacao : Callback HTTP 200 recebido\naguarda confirmação do Worker
-
-    ErroTecnico --> Processando : Retry automático\n(backoff exp. — máx. 3x)
-    ErroTecnico --> Limbo : Retries esgotados\n> 15 min sem resposta
-
-    Limbo --> PendenteConciliacao : Worker de reconciliação\nencontra e processa (a cada 15 min)
-
-    PendenteConciliacao --> Conciliada : Valores OK\n(diferença ≤ R$ 0,50)
-    PendenteConciliacao --> DivergenciaAuditoria : Valores divergentes\n(diferença > R$ 0,50)
-
-    Rejeitada --> [*] : Registro histórico mantido
-    Conciliada --> [*] : Registro histórico mantido
-    DivergenciaAuditoria --> Conciliada : Aprovação manual do Controller
-    DivergenciaAuditoria --> [*] : Estorno solicitado
+    [*] --> PROCESSAMENTO_PENDENTE : POST /ordens (idempotency key generated)
+    PROCESSAMENTO_PENDENTE --> Enfileirada : API accepts transaction (HTTP 202)
+    Transient --> PROCESSAMENTO_PENDENTE : Gateway callback received / Webhook callback
+    CONCILIADO --> [*]
+    REJEITADA --> [*]
+    DIVERGENTE_AUDITORIA --> [*] : Charge refunded / reversed
 ```
 
 **Tabela de Status de Integração:**
@@ -479,16 +485,16 @@ C4Container
 
     Container(spa, "SPA React", "React 18 / Vite", "Interface com modo Operacional (MEI) e Auditoria (Especialista).")
 
-    Boundary(backend, "Core ERP — Java 17") {
+    Boundary(backend, "Core ERP — Java 21") {
         Container(api, "API REST", "Spring Web MVC", "Entrypoint com Idempotency Interceptor e rate limiting.")
         Container(hook_engine, "Hook Registry", "Spring Events", "Publica eventos de domínio para listeners de plugins.")
         Container(worker, "Reconciliation Worker", "Spring Batch + Quartz", "Job de varredura a cada 15 min via sp_reconciliar_ordem.")
         Container(acl, "Anti-Corruption Layer", "Spring RestTemplate / WebClient", "Adapters para gateways externos com Circuit Breaker e Retry.")
     }
 
-    ContainerDb(postgres, "PostgreSQL 15", "Bitemporal", "Tabelas core com valid_from/to. Stored Procedures de reconciliação e cálculo fiscal.")
-    ContainerDb(redis, "Redis 7", "KV Store", "Cache de idempotência (TTL 24h) e dados de sessão.")
-    ContainerQueue(rabbit, "RabbitMQ 3.12", "Message Broker", "Filas de processamento assíncrono com DLQ e backoff exponencial.")
+    ContainerDb(postgres, "PostgreSQL 16", "Bitemporal", "Tabelas core com valid_from/to. Stored Procedures de reconciliação e cálculo fiscal.")
+    ContainerDb(redis, "Redis 7.2", "KV Store", "Cache de idempotência (TTL 24h) e dados de sessão.")
+    ContainerQueue(rabbit, "RabbitMQ 3.13", "Message Broker", "Filas de processamento assíncrono com DLQ e backoff exponencial.")
     System_Ext(gateway, "Gateway Externo", "PIX / Cartão")
 
     Rel(user, spa, "Usa", "HTTPS")

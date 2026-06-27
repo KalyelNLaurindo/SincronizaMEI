@@ -159,9 +159,9 @@ graph TD
     end
 
     subgraph API_Gateway [API & Interceptor Pipeline]
-        Idempotency["IdempotencyInterceptor<br>(Redis Cache Check)"]
         Correlation["CorrelationIdInterceptor<br>(MDC / Trace ID Generation)"]
         MaskFilter["MaskedLoggingFilter<br>(PII Log Obfuscation)"]
+        Idempotency["IdempotencyInterceptor<br>(Redis Cache Check)"]
     end
 
     subgraph Core_Backend [Core Backend App]
@@ -170,6 +170,10 @@ graph TD
             UseCase["CreateOrdemUseCase<br>(Application Service)"]
             Domain["Ordem Entity & Money VO<br>(Domain Business Rules)"]
             EventPub["ApplicationEventPublisher<br>(Domain Event Dispatcher)"]
+        end
+
+        subgraph Estoque_Context [Inventory Context]
+            EventListener["ReservaEstoqueEventListener<br>(Domain Event Listener)"]
         end
 
         subgraph Reconcile_Context [Reconciliation Context]
@@ -189,10 +193,10 @@ graph TD
         Gateway[("External Gateway API<br>(PIX / Card Callback)")]
     end
 
-    SPA -->|HTTPS JSON Request| Idempotency
-    Idempotency --> Correlation
+    SPA -->|HTTPS JSON Request| Correlation
     Correlation --> MaskFilter
-    MaskFilter --> Controller
+    MaskFilter --> Idempotency
+    Idempotency --> Controller
     
     Controller -->|Calls| UseCase
     UseCase -->|Validates| Domain
@@ -206,7 +210,8 @@ graph TD
     GatewayAdapter -->|Requeues on failure| Rabbit
     Idempotency -->|Query / SET NX EX| RedisDB
     
-    EventPub -.->|Async Stock Reservation| Postgres
+    EventPub -.->|Fires Transactional Event| EventListener
+    EventListener -->|Mutates Inventory State| Postgres
 ```
 
 ---
@@ -584,7 +589,7 @@ LANGUAGE sql STABLE AS $$
         o.correlation_id,
         (o.status = 'PROCESSAMENTO_PENDENTE'
             AND o.valid_to = 'infinity'
-            AND o.valid_from < NOW() - INTERVAL '30 minutes') AS em_limbo,
+            AND o.valid_from < NOW() - INTERVAL '15 minutes') AS em_limbo,
         ROUND(EXTRACT(EPOCH FROM (NOW() - o.valid_from)) / 60, 1) AS minutos_limbo
     FROM financeiro.ordens o
     WHERE o.idempotency_key = p_idempotency_key
