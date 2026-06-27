@@ -11,6 +11,10 @@
 
 ---
 
+![Dashboard SincronizaMEI](./assets/dashboard_mockup.png)
+
+---
+
 ## **🏛️ Repository Metadata & Context**
 
 | Property               | Description                                                                              |
