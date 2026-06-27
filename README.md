@@ -249,37 +249,61 @@ O **SincronizaMEI** inverte o paradigma da passividade. Em vez de "esperar que a
 
 ### 2.5 Ciclo de Vida da Transação
 
-```mermaid
-stateDiagram-v2
-    direction TB
-
-    state "Transient States (In-Flight / RabbitMQ)" as Transient {
-        direction LR
-        Enfileirada --> Processando : Worker consumes from queue\nand calls Gateway
-        Processando --> ErroTecnico : Gateway Timeout / HTTP 5xx
-        ErroTecnico --> Processando : Automatic Retry\n(Exp Backoff - max 3x)
-    }
-
-    state "Persisted Database States (PostgreSQL Columns)" as Persisted {
-        direction TB
-        state PROCESSAMENTO_PENDENTE {
-            direction LR
-            Criada --> Limbo : Retry limit exhausted\n(> 15 min SLA)
-            Limbo --> Reconciliando : Scheduled reconciliation worker scans
-        }
-        PROCESSAMENTO_PENDENTE --> CONCILIADO : Reconciled (Diff <= R$ 0.50)
-        PROCESSAMENTO_PENDENTE --> DIVERGENTE_AUDITORIA : Audit Alert (Diff > R$ 0.50)
-        PROCESSAMENTO_PENDENTE --> REJEITADA : Insufficient funds / Validation error
-        
-        DIVERGENTE_AUDITORIA --> CONCILIADO : Controller Manual Approval
-    }
-
-    [*] --> PROCESSAMENTO_PENDENTE : POST /ordens (idempotency key generated)
-    PROCESSAMENTO_PENDENTE --> Enfileirada : API accepts transaction (HTTP 202)
-    Transient --> PROCESSAMENTO_PENDENTE : Gateway callback received / Webhook callback
-    CONCILIADO --> [*]
-    REJEITADA --> [*]
-    DIVERGENTE_AUDITORIA --> [*] : Charge refunded / reversed
+```text
+           [Client POST /ordens] (Idempotency Key Generated)
+                    │
+                    ▼
+       ┌──────────────────────────┐
+       │  PROCESSAMENTO_PENDENTE  │
+       │ (Persisted State in DB)  │
+       └────────────┬─────────────┘
+                    │ (API returns HTTP 202 Accepted)
+                    ▼
+       ┌──────────────────────────┐
+  ┌───>│        ENFILEIRADA       │ ◄─────────────────────────┐
+  │    │  (RabbitMQ Ingestion)    │                           │
+  │    └────────────┬─────────────┘                           │
+  │                 │ (Worker consumes from queue)            │
+  │                 ▼                                         │
+  │    ┌──────────────────────────┐                           │
+  │    │       PROCESSANDO        │                           │
+  │    │ (API call to Payment GW) │                           │
+  │    └────────────┬─────────────┘                           │
+  │                 │                                         │
+  │                 ├──(success callback)──┐                  │
+  │                 │                      │                  │
+  │ (tech timeout)  ▼ (HTTP 5xx)           │                  │ (automatic retry, max 3x)
+  │    ┌──────────────────────────┐        │                  │
+  │    │       ERRO_TECNICO       ├────────┼──────────────────┘
+  │    │ (Awaiting retry cycle)   │        │
+  │    └────────────┬─────────────┘        │
+  │                 │ (retries exhausted)  │
+  │                 ▼                      │
+  │    ┌──────────────────────────┐        │
+  │    │          LIMBO           │        │
+  │    │ (Unsettled transaction)  │        │
+  │    └────────────┬─────────────┘        │
+  │                 │                      │
+  │                 │ (reconciliation job  │
+  │                 │  scans every 15m)    │
+  │                 ▼                      │
+  │    ┌──────────────────────────┐        │
+  │    │      RECONCILIANDO       │        │
+  │    │ (Pessimistic DB lock)    │        │
+  │    └────────────┬─────────────┘        │
+  │                 │                      │
+  │        ┌────────┴────────┬─────────────┤
+  │        │ (diff <= R$0.50)│ (diff > R$0.50) (success PIX callback)
+  ▼        ▼                 ▼             ▼
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│  REJEITADA   │   │  CONCILIADO  │   │  DIVERGENTE  │
+│  (Fund Error │   │ (AC-01.1/2)  │   │  AUDITORIA   │
+│  / Rejected) │   └──────▲───────┘   └──────┬───────┘
+└──────┬───────┘          │                  │
+       │                  │ (approved)       │ (refunded)
+       ▼                  └──────────────────┼───────────────┐
+   [  EXIT  ] <──────────────────────────────┘               ▼
+                                                         [  EXIT  ]
 ```
 
 **Tabela de Status de Integração:**
@@ -457,55 +481,78 @@ A engenharia é puramente **TDD First** (RED-GREEN-REFACTOR), e a inserção ind
 
 ### Nível 1 — Contexto do Sistema
 
-```mermaid
-C4Context
-    title Diagrama de Contexto — SincronizaMEI
-
-    Person(mei, "Usuário MEI", "Gestor de pequeno negócio. Usa o sistema para faturar e controlar fluxo de caixa.")
-    Person(analyst, "Controller / Analista", "Audita dados históricos e reconcilia divergências.")
-
-    System(erp, "SincronizaMEI Core ERP", "Plataforma de gestão financeira e operacional com reconciliação bitemporal.")
-
-    System_Ext(gateway, "Gateway de Pagamento", "Processa transações PIX, cartão e boleto.")
-    System_Ext(receita, "Receita Federal / SEFAZ", "Consulta e emissão de NF-e.")
-
-    Rel(mei, erp, "Fatura, consulta saldo, gerencia estoque")
-    Rel(analyst, erp, "Audita histórico e reconcilia divergências")
-    Rel(erp, gateway, "Envia ordens de pagamento e recebe callbacks", "HTTPS/REST")
-    Rel(erp, receita, "Emite NF-e e consulta CNPJ", "HTTPS/SOAP")
+```text
+  ┌────────────────────────────────────────────────────────┐
+  │                   SincronizaMEI System Context         │
+  └───────────────────────────┬────────────────────────────┘
+                              │
+             ┌────────────────┴────────────────┐
+             ▼                                 ▼
+┌──────────────────────────┐     ┌──────────────────────────┐
+│       Usuário MEI        │     │  Controller / Analista   │
+│ (Small business manager) │     │ (Auditor & Controller)   │
+└────────────┬─────────────┘     └─────────────┬────────────┘
+             │                                 │
+             │ (creates invoices, cash flow)   │ (audits state & reconciles)
+             ▼                                 ▼
+┌───────────────────────────────────────────────────────────┐
+│                    SincronizaMEI Core ERP                 │
+│      (Modular Monolith for Financial Reconciliation)      │
+└────────────┬─────────────────────────────────┬────────────┘
+             │                                 │
+             │ (processes PIX / Card,          │ (issues NF-e
+             │  receives billing callbacks)    │  and queries CNPJ)
+             ▼                                 ▼
+┌──────────────────────────┐     ┌──────────────────────────┐
+│    Gateway Externo       │     │ Receita Federal / SEFAZ  │
+│ (Payment Gateway API)    │     │  (External Gov. Service) │
+└──────────────────────────┘     └──────────────────────────┘
 ```
 
 ### Nível 2 — Contêineres e Fluxo de Dados
 
-```mermaid
-C4Container
-    title Diagrama de Contêineres — SincronizaMEI
-
-    Person(user, "Usuário", "MEI ou Controller")
-
-    Container(spa, "SPA React", "React 18 / Vite", "Interface com modo Operacional (MEI) e Auditoria (Especialista).")
-
-    Boundary(backend, "Core ERP — Java 21") {
-        Container(api, "API REST", "Spring Web MVC", "Entrypoint com Idempotency Interceptor e rate limiting.")
-        Container(hook_engine, "Hook Registry", "Spring Events", "Publica eventos de domínio para listeners de plugins.")
-        Container(worker, "Reconciliation Worker", "Spring Batch + Quartz", "Job de varredura a cada 15 min via sp_reconciliar_ordem.")
-        Container(acl, "Anti-Corruption Layer", "Spring RestTemplate / WebClient", "Adapters para gateways externos com Circuit Breaker e Retry.")
-    }
-
-    ContainerDb(postgres, "PostgreSQL 16", "Bitemporal", "Tabelas core com valid_from/to. Stored Procedures de reconciliação e cálculo fiscal.")
-    ContainerDb(redis, "Redis 7.2", "KV Store", "Cache de idempotência (TTL 24h) e dados de sessão.")
-    ContainerQueue(rabbit, "RabbitMQ 3.13", "Message Broker", "Filas de processamento assíncrono com DLQ e backoff exponencial.")
-    System_Ext(gateway, "Gateway Externo", "PIX / Cartão")
-
-    Rel(user, spa, "Usa", "HTTPS")
-    Rel(spa, api, "Requisições JSON", "HTTPS + X-Idempotency-Key")
-    Rel(api, redis, "Verifica + armazena chave de idempotência", "SET NX EX")
-    Rel(api, rabbit, "Enfileira eventos de falha ou processamento assíncrono")
-    Rel(api, hook_engine, "Publica eventos de domínio após persistência")
-    Rel(hook_engine, postgres, "Persiste estado via Stored Procedures")
-    Rel(worker, postgres, "Executa sp_reconciliar_ordem a cada 15 min")
-    Rel(acl, gateway, "Envia ordens e recebe callbacks", "HTTPS/REST")
-    Rel(rabbit, acl, "Consome eventos de reconciliação pendente")
+```text
+             ┌─────────────────────────────────────────┐
+             │            MEI & CONTROLLER             │
+             └────────────────────┬────────────────────┘
+                                  │ (HTTPS)
+                                  ▼
+             ┌─────────────────────────────────────────┐
+             │               SPA REACT                 │
+             │         (Frontend UI - PWA Client)      │
+             └────────────────────┬────────────────────┘
+                                  │ (HTTPS JSON Requests with
+                                  │  X-Idempotency-Key Header)
+                                  ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                    CORE BACKEND APP (Java 21 Monolith)               │
+│                                                                      │
+│    ┌──────────────┐         ┌──────────────┐         ┌──────────┐    │
+│    │   API REST   ├────────>│ Hook Registry├────────>│  Worker  │    │
+│    │ (Spring Boot)│         │(Spring Events│         │ (Quartz) │    │
+│    └──────┬───────┘         └──────────────┘         └────┬─────┘    │
+│           │                                               │          │
+│           ▼                                               ▼          │
+│    ┌──────────────┐                                                  │
+│    │  Gateway ACL │                                                  │
+│    │ (RestTemplate)                                                  │
+│    └──────┬───────┘                                                  │
+└───────────┼───────────────────────────────────────────────┼──────────┘
+            │                                               │
+            │ (sends callbacks & HTTP REST)                 │ (native DDL SP execution)
+            ▼                                               ▼
+┌──────────────────────┐   ┌───────────────────┐   ┌───────────────────┐
+│   Gateway Externo    │   │  PostgreSQL 16 DB │   │    Redis 7.2 KV   │
+│   (Payment API)      │   │ (financeiro.ordens│   │ (idempotency key  │
+└──────────────────────┘   └─────────▲─────────┘   │  & session data)  │
+                                     │             └─────────▲─────────┘
+                                     │ (durable              │ (checks key
+                                     │  persistence)         │  at L7 filter)
+                           ┌─────────┴─────────┐             │
+                           │  RabbitMQ Broker  ├─────────────┘
+                           │ (AMQP / 3.13 Msg  │
+                           │  durable queues)  │
+                           └───────────────────┘
 ```
 
 ---

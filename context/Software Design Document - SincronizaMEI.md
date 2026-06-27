@@ -88,31 +88,40 @@ Each bounded context enforces a Hexagonal (Ports & Adapters) architecture struct
     *   **Transactional Event Outbox:** Listeners use `@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)` to ensure side-effects (e.g., updating inventory after payment) are only executed if the primary transaction commits successfully.
 
 ```text
-                  +-------------------------------------------------+  
-                  |             SincronizaMEI Core App              |  
-                  |                                                 |  
-[ User Actions ] ===> [ Inbound Controller/CLI ]                     |  
-                  |         (Inbound Adapter)                       |  
-                  |                 ||                              |  
-                  |                 \/                              |  
-                  |       [ IUseCaseBoundary ]                      |  
-                  |          (Inbound Port)                         |  
-                  |                 ||                              |  
-                  |                 \/                              |  
-                  |    +--------------------------+                 |  
-                  |    |      Domain Model        |                 |  
-                  |    |  - DomainEntity          |                 |  
-                  |    +--------------------------+                 |  
-                  |                 ||                              |  
-                  |                 \/                              |  
-                  |         [ IRepositoryPort ]                     |  
-                  |         (Outbound Port)                         |  
-                  |                 ||                              |  
-                  +-----------------||------------------------------+  
-                                    ||  
-                                    \/  
-                         [ ConcreteRepository ] ===> [ Persistence/DB ]  
-                            (Outbound Adapter)
+┌────────────────────────────────────────────────────────────────────────┐
+│                        SincronizaMEI Core Monolith                     │
+│                                                                        │
+│   [ Inbound Adapters ]              [ Application Layer ]              │
+│  ┌────────────────────┐            ┌──────────────────────┐            │
+│  │ HTTP Controllers   │ ──(calls)─>│  IUseCaseBoundary    │            │
+│  │ CLI / Cron Jobs    │            │     (Inbound Port)   │            │
+│  │ Queue Subscribers  │            └──────────┬───────────┘            │
+│  └────────────────────┘                       │ (implemented by)       │
+│                                               ▼                        │
+│                                    ┌──────────────────────┐            │
+│                                    │  UseCaseHandler      │            │
+│                                    │  (Application Service│            │
+│                                    └────┬────────────┬────┘            │
+│                                         │            │                 │
+│                      (orchestrates)     │            │ (calls)         │
+│                      ┌──────────────────┘            └──────┐          │
+│                      ▼                                      ▼          │
+│             ┌──────────────────┐                  ┌──────────────────┐ │
+│             │   Domain Model   │                  │ IRepositoryPort  │ │
+│             │ (Entities & VOs) │                  │ (Outbound Port)  │ │
+│             └──────────────────┘                  └─────────┬────────┘ │
+└─────────────────────────────────────────────────────────────┼──────────┘
+                                                              │ (implemented by)
+                                                              ▼
+                                                    ┌──────────────────┐
+                                                    │  ConcreteAdapter │
+                                                    │ (Outbound Repo)  │
+                                                    └─────────┬────────┘
+                                                              │ (interacts)
+                                                              ▼
+                                                    ┌──────────────────┐
+                                                    │ PostgreSQL 16 DB │
+                                                    └──────────────────┘
 ```
 
 ---
@@ -152,66 +161,69 @@ Each bounded context enforces a Hexagonal (Ports & Adapters) architecture struct
 
 *   **Field 5.1 - Component Diagram Visualization:**
 
-```mermaid
-graph TD
-    subgraph Client_Layer [Client Layer]
-        SPA["PWA Frontend UI<br>(React / TypeScript)"]
-    end
-
-    subgraph API_Gateway [API & Interceptor Pipeline]
-        Correlation["CorrelationIdInterceptor<br>(MDC / Trace ID Generation)"]
-        MaskFilter["MaskedLoggingFilter<br>(PII Log Obfuscation)"]
-        Idempotency["IdempotencyInterceptor<br>(Redis Cache Check)"]
-    end
-
-    subgraph Core_Backend [Core Backend App]
-        subgraph Finance_Context [Finance Context]
-            Controller["FaturamentoController<br>(REST API Inbound)"]
-            UseCase["CreateOrdemUseCase<br>(Application Service)"]
-            Domain["Ordem Entity & Money VO<br>(Domain Business Rules)"]
-            EventPub["ApplicationEventPublisher<br>(Domain Event Dispatcher)"]
-        end
-
-        subgraph Estoque_Context [Inventory Context]
-            EventListener["ReservaEstoqueEventListener<br>(Domain Event Listener)"]
-        end
-
-        subgraph Reconcile_Context [Reconciliation Context]
-            Worker["ReconciliationWorker<br>(Virtual Threads quartz Job)"]
-            Adapter["ReconciliacaoProcedureAdapter<br>(Outbound Stored Procedure Call)"]
-        end
-
-        subgraph Integration_ACL [Integration ACL]
-            GatewayAdapter["GatewayPagamentoAdapter<br>(Circuit Breaker & Retry)"]
-        end
-    end
-
-    subgraph Database_Layer [Database Layer]
-        Postgres[("PostgreSQL 16 DB<br>(financeiro.ordens table)")]
-        RedisDB[("Redis 7 KV Store<br>(idempotency keys)")]
-        Rabbit[("RabbitMQ Broker<br>(gateway.dlq / billing.queue)")]
-        Gateway[("External Gateway API<br>(PIX / Card Callback)")]
-    end
-
-    SPA -->|HTTPS JSON Request| Correlation
-    Correlation --> MaskFilter
-    MaskFilter --> Idempotency
-    Idempotency --> Controller
-    
-    Controller -->|Calls| UseCase
-    UseCase -->|Validates| Domain
-    UseCase -->|Publishes Events| EventPub
-    UseCase -->|Invokes| GatewayAdapter
-    
-    Worker -->|Quartz Scheduler| Adapter
-    Adapter -->|Native CALL sp_reconciliar_ordem| Postgres
-    
-    GatewayAdapter -->|HTTP / REST| Gateway
-    GatewayAdapter -->|Requeues on failure| Rabbit
-    Idempotency -->|Query / SET NX EX| RedisDB
-    
-    EventPub -.->|Fires Transactional Event| EventListener
-    EventListener -->|Mutates Inventory State| Postgres
+```text
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                                CLIENT LAYER                                  │
+│  ┌────────────────────────────────────────────────────────────────────────┐  │
+│  │ PWA Frontend UI (React / TypeScript)                                   │  │
+│  └───────────────────────────────────┬────────────────────────────────────┘  │
+└──────────────────────────────────────┼───────────────────────────────────────┘
+                                       │ (HTTP requests with Idempotency Key)
+                                       ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                         API GATEWAY & PIPELINE CONTROLS                      │
+│  ┌────────────────────────────────────────────────────────────────────────┐  │
+│  │ 1. CorrelationIdInterceptor (Injects Trace ID to MDC)                  │  │
+│  └───────────────────────────────────┬────────────────────────────────────┘  │
+│                                      ▼                                       │
+│  ┌────────────────────────────────────────────────────────────────────────┐  │
+│  │ 2. MaskedLoggingFilter (Obfuscates sensitive PII logs)                 │  │
+│  └───────────────────────────────────┬────────────────────────────────────┘  │
+│                                      ▼                                       │
+│  ┌────────────────────────────────────────────────────────────────────────┐  │
+│  │ 3. IdempotencyInterceptor (Redis check & lock: SET NX EX)              │  │
+│  └───────────────────────────────────┬────────────────────────────────────┘  │
+└──────────────────────────────────────┼───────────────────────────────────────┘
+                                       ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                       CORE MONOLITH APPS (Spring Boot)                       │
+│                                                                              │
+│   [ Finance Context ]                                                        │
+│  ┌────────────────────────────────────────────────────────────────────────┐  │
+│  │ FaturamentoController (REST endpoint receiver)                         │  │
+│  └───────────────────────────────────┬────────────────────────────────────┘  │
+│                                      ▼                                       │
+│  ┌────────────────────────────────────────────────────────────────────────┐  │
+│  │ CreateOrdemUseCase (Core Application Orchestrator)                     │  │
+│  └──────┬────────────────────────────┬─────────────────────────────┬──────┘  │
+│         │ (validates)                │ (triggers events)           │ (delegates)
+│         ▼                            ▼                             ▼         │
+│  ┌──────────────┐           ┌────────────────┐            ┌──────────────┐   │
+│  │ Domain Rules │           │  EventPub      │            │ Gateway      │   │
+│  │ (Ordem Entity│           │  (Domain       │            │ Adapter      │   │
+│  │  & Money VO) │           │   Dispatcher)  │            │ (ACL Client) │   │
+│  └──────────────┘           └────────┬───────┘            └──────┬───────┘   │
+│                                      │ (fires async event)       │           │
+│   [ Estoque Context ]                ▼                           │           │
+│  ┌───────────────────────────────────────────┐                   │           │
+│  │ ReservaEstoqueEventListener (Consumer)    │                   │           │
+│  └───────────────────┬───────────────────────┘                   │           │
+└──────────────────────┼───────────────────────────────────────────┼───────────┘
+                       │ (mutates inventory)                       │ (calls REST / 202)
+                       ▼                                           ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                             INFRASTRUCTURE LAYER                             │
+│  ┌────────────────────┐      ┌────────────────────┐      ┌────────────────┐  │
+│  │  PostgreSQL 16 DB  │      │   Redis 7.2 Cache  │      │ RabbitMQ Queue │  │
+│  │ (financeiro.ordens)│      │  (idempotency key) │      │ (billing.queue)│  │
+│  └──────────▲─────────┘      └─────────▲──────────┘      └────────▲───────┘  │
+└─────────────┼──────────────────────────┼──────────────────────────┼──────────┘
+              │ (reconciles every 15m)   │ (checks keys)            │ (queues retries)
+              │                        ┌─┘                          │
+        ┌─────┴───────────────┐        │                            │
+        │ ReconciliationWorker│────────┘                            │
+        │ (Quartz Virtual Thrd│─────────────────────────────────────┘
+        └─────────────────────┘
 ```
 
 ---
