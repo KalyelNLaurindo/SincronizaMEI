@@ -134,6 +134,53 @@ Each bounded context enforces a Hexagonal (Ports & Adapters) architecture struct
 
 ---
 
+### **3.1. Cryptographic and Signature Verification Code**
+
+#### **PII Column Encryption Converter**
+```java
+// Coluna CPF encriptada com AES-256-GCM + IV único por registro
+// O hash SHA-256 permite correlação em logs sem expor o dado real
+@Column(name = "cpf_encrypted")
+@Convert(converter = AesGcmEncryptedConverter.class)
+private String cpf;
+
+@Column(name = "cpf_hash")   // SHA-256(cpf) — usado para correlação de logs
+private String cpfHash;
+
+@Masked(strategy = MaskingStrategy.CPF)  // Log: "***.***.123-**"
+public String getCpf() { return cpf; }
+```
+
+#### **Inbound Webhook HMAC-SHA256 Signature Validator**
+```java
+// Previne ataques de replay e callbacks forjados
+@Component
+public class WebhookSignatureValidator {
+    public void validate(String payload, String signature, String timestamp) {
+        // Rejeita se timestamp > 5 minutos (previne replay attacks)
+        if (Instant.now().minusSeconds(300).isAfter(Instant.ofEpochSecond(Long.parseLong(timestamp)))) {
+            throw new ReplayAttackException("Webhook timestamp expirado");
+        }
+        String expectedSignature = hmacSha256(gatewaySecret, timestamp + "." + payload);
+        if (!MessageDigest.isEqual(expectedSignature.getBytes(), signature.getBytes())) {
+            throw new InvalidSignatureException("Assinatura de webhook inválida");
+        }
+    }
+}
+```
+
+### **3.2. Responsible Disclosure & Vulnerability Response SLA**
+
+Vulnerabilities must not be disclosed publicly. Report them to `security@sincronizamei.com.br` following the SLA matrix:
+
+| Severity | Patch Deadline | Technical Scope |
+| :--- | :--- | :--- |
+| **Critical (CVSS &ge; 9.0)** | 72 hours | SQLi, Idempotency bypass, PII leaks, finance race conditions |
+| **High (CVSS 7.0–8.9)** | 30 days | High-impact CVEs, dynamic secret leak risks |
+| **Medium (CVSS 4.0–6.9)** | Next release cycle | Minor validation bypass, information disclosures |
+
+---
+
 ## **🔐 3. Security Architecture & Data Protection**
 
 ### **✍️ Security Specification Form**
@@ -157,7 +204,85 @@ Each bounded context enforces a Hexagonal (Ports & Adapters) architecture struct
 
 ---
 
-## **📐 5. System Component Diagram (C4 Model — Level 3: Inside Core Backend App)**
+## **📐 5. System Architecture Diagrams (C4 Model)**
+
+### **5.1. Level 1: System Context Diagram**
+
+```text
+  ┌────────────────────────────────────────────────────────┐
+  │                   SincronizaMEI System Context         │
+  └───────────────────────────┬────────────────────────────┘
+                              │
+             ┌────────────────┴────────────────┐
+             ▼                                 ▼
+┌──────────────────────────┐     ┌──────────────────────────┐
+│       Usuário MEI        │     │  Controller / Analista   │
+│ (Small business manager) │     │ (Auditor & Controller)   │
+└────────────┬─────────────┘     └─────────────┬────────────┘
+             │                                 │
+             │ (creates invoices, cash flow)   │ (audits state & reconciles)
+             ▼                                 ▼
+┌───────────────────────────────────────────────────────────┐
+│                    SincronizaMEI Core ERP                 │
+│      (Modular Monolith for Financial Reconciliation)      │
+└────────────┬─────────────────────────────────┬────────────┘
+             │                                 │
+             │ (processes PIX / Card,          │ (issues NF-e
+             │  receives billing callbacks)    │  and queries CNPJ)
+             ▼                                 ▼
+┌──────────────────────────┐     ┌──────────────────────────┐
+│    Gateway Externo       │     │ Receita Federal / SEFAZ  │
+│ (Payment Gateway API)    │     │  (External Gov. Service) │
+└──────────────────────────┘     └──────────────────────────┘
+```
+
+### **5.2. Level 2: Container Diagram**
+
+```text
+             ┌─────────────────────────────────────────┐
+             │            MEI & CONTROLLER             │
+             └────────────────────┬────────────────────┘
+                                  │ (HTTPS)
+                                  ▼
+             ┌─────────────────────────────────────────┐
+             │               SPA REACT                 │
+             │         (Frontend UI - PWA Client)      │
+             └────────────────────┬────────────────────┘
+                                  │ (HTTPS JSON Requests with
+                                  │  X-Idempotency-Key Header)
+                                  ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                    CORE BACKEND APP (Java 21 Monolith)               │
+│                                                                      │
+│    ┌──────────────┐         ┌──────────────┐         ┌──────────┐    │
+│    │   API REST   ├────────>│ Hook Registry├────────>│  Worker  │    │
+│    │ (Spring Boot)│         │(Spring Events│         │ (Quartz) │    │
+│    └──────┬───────┘         └──────────────┘         └────┬─────┘    │
+│           │                                               │          │
+│           ▼                                               ▼          │
+│    ┌──────────────┐                                                  │
+│    │  Gateway ACL │                                                  │
+│    │ (RestTemplate)                                                  │
+│    └──────┬───────┘                                                  │
+└───────────┼───────────────────────────────────────────────┼──────────┘
+            │                                               │
+            │ (sends callbacks & HTTP REST)                 │ (native DDL SP execution)
+            ▼                                               ▼
+┌──────────────────────┐   ┌───────────────────┐   ┌───────────────────┐
+│   Gateway Externo    │   │  PostgreSQL 16 DB │   │    Redis 7.2 KV   │
+│   (Payment API)      │   │ (financeiro.ordens│   │ (idempotency key  │
+└──────────────────────┘   └─────────▲─────────┘   │  & session data)  │
+                                     │             └─────────▲─────────┘
+                                     │ (durable              │ (checks key
+                                     │  persistence)         │  at L7 filter)
+                           ┌─────────┴─────────┐             │
+                           │  RabbitMQ Broker  ├─────────────┘
+                           │ (AMQP / 3.13 Msg  │
+                           │  durable queues)  │
+                           └───────────────────┘
+```
+
+### **5.3. Level 3: Inside Core Backend App Component Diagram**
 
 *   **Field 5.1 - Component Diagram Visualization:**
 
@@ -294,6 +419,46 @@ CREATE TRIGGER trg_bloquear_delete
 
 ## **🚀 7. Continuous Integration, Deployment & QA**
 
+### **7.1. CI/CD Deployment Pipeline Configuration**
+
+The workflow matches the following standard GitHub Actions Quality Gate pipeline:
+```yaml
+# .github/workflows/ci.yml
+jobs:
+  quality-gate:
+    steps:
+      - name: "1. Build & Compile"
+        run: ./mvnw compile -DskipTests
+
+      - name: "2. Unit Tests + Coverage Gate"
+        run: ./mvnw test
+
+      - name: "3. Integration Tests (Testcontainers)"
+        run: ./mvnw verify -Dspring.profiles.active=test
+
+      - name: "4. Architecture Tests (ArchUnit)"
+        run: ./mvnw test -pl backend -Dtest=ModuleBoundaryTest
+
+      - name: "5. SAST + CVE Scan"
+        run: |
+          trivy fs --severity HIGH,CRITICAL --exit-code 1 .
+          ./mvnw org.owasp:dependency-check-maven:check
+
+      - name: "6. Secret Scan"
+        run: trufflehog git file://. --since-commit HEAD~1 --fail
+
+      - name: "7. Flyway Validation"
+        run: ./mvnw flyway:validate -Dflyway.url=$STAGING_DB_URL
+
+      - name: "8. Performance Smoke Test"
+        run: k6 run scripts/k6/smoke-test.js --vus 50 --duration 60s
+
+      - name: "9. Docker Build (multi-stage)"
+        run: docker build -t sincronizamei:$GITHUB_SHA .
+```
+
+---
+
 *   **Test-Driven Development (TDD) Cycle:** The development cycle strictly follows RED-GREEN-REFACTOR. No production code is merged without unit/integration tests executing successfully.
 *   **Quality Gates & Architecture Guardrails:**
     *   **Zero Leakage Rule:** Checked via ArchUnit. The domain layer must not import any classes from infrastructure, database packages, or frameworks.
@@ -317,6 +482,37 @@ CREATE TRIGGER trg_bloquear_delete
 
 ---
 
+### **9.1. Prometheus Performance Metrics**
+```java
+@Component
+public class ReconciliacaoMetrics {
+    private final Gauge ordemLimboGauge;
+    private final Counter divergenciaDetectada;
+    private final Histogram tempoReconciliacao;
+    // Alert triggers:
+    // ordens_em_limbo_ratio > 0.001 -> Slack alert
+    // divergencia_detectada_total rate > 5/min -> PagerDuty P2
+    // reconciliacao_tempo_p95 > 900s -> PagerDuty P1
+}
+```
+
+### **9.2. Grafana Operations Dashboard Blueprint**
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ SincronizaMEI — Financial Health Dashboard                  │
+├─────────────────────┬───────────────────────────────────────┤
+│ Ordens em Limbo     │ ████░░░░░░ 0.03% (meta: < 0.1%)      │
+│ DLQ Depth           │ 0 mensagens                           │
+│ Latência p95        │ 423ms (meta: < 800ms) ✓               │
+│ Circuit Breakers    │ Gateway PIX: CLOSED ✓                 │
+│                     │ Gateway Cartão: CLOSED ✓              │
+│ Última Reconciliação│ há 3 min (próxima: 12 min)            │
+│ Uptime              │ 99.97% (30 dias)                      │
+└─────────────────────┴───────────────────────────────────────┘
+```
+
+---
+
 ## **📈 9. Observability & System Monitoring**
 
 ### **✍️ Observability Design Form**
@@ -327,6 +523,27 @@ CREATE TRIGGER trg_bloquear_delete
 | **Field 9.2 - Telemetry Metrics** | `ordens_em_limbo_ratio` | Gauge tracking the percentage of orders marked as `PROCESSAMENTO_PENDENTE` for >30 minutes. Monitored via Prometheus. |
 | | `reconciliacao_tempo_p95` | Latency metric tracking the p95 execution time of `sp_reconciliar_ordem`. |
 | | JVM Virtual Thread Count | Tracks active virtual threads in real time to monitor Project Loom runtime performance. |
+
+---
+
+### **10.1. Infrastructure-as-Code ECS Task Declarations**
+```hcl
+# terraform/modules/ecs-service/main.tf
+resource "aws_ecs_service" "sincronizamei" {
+  name            = "sincronizamei-${var.environment}"
+  desired_count   = var.min_instances
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
+  load_balancer {
+    target_group_arn = aws_lb_target_group.blue.arn
+  }
+}
+resource "aws_ecs_task_definition" "sincronizamei" {
+  stop_timeout = 30 # Graceful Shutdown window to drain queues
+}
+```
 
 ---
 
@@ -460,6 +677,59 @@ SincronizaMEI/
 
 ---
 
+### **15.1. Debugging SLAs & Support Incident Classification**
+
+| Severity | Classification Criterion | SLA Response | SLA Resolution | Escalation Path |
+| :--- | :--- | :--- | :--- | :--- |
+| **P1 — Critical** | Financial mismatch > R$ 10.00, database system down, PII leak | 1 hour (24/7) | 4 hours | PagerDuty ➔ Dev On-Call ➔ CTO |
+| **P2 — High** | Reconciliation stuck > 1h, non-financial data bug, DLQ depth exceeded | 4 hours | 1 business day | Slack #incidents ➔ Tech Lead |
+| **P3 — Medium** | Usability bug, reporting discrepancy | 1 business day | 3 business days | Jira backlog ➔ Next Sprint |
+
+### **15.2. Debug Triage & Drift Recovery Runbooks**
+
+#### **Runbook A: Drift Recovery and Limbo Settle**
+*Gatilho:* Orders stuck in `PROCESSAMENTO_PENDENTE` longer than the SLA threshold (15 minutes).
+
+1. **Locate drift items:**
+   ```sql
+   SELECT * FROM financeiro.fn_check_integrity('<idempotency_key>');
+   ```
+2. **Verify gateway status check:**
+   ```bash
+   curl -s https://api.sincronizamei.com.br/health | jq '.checks.gateway'
+   ```
+3. **Resolve:** If Gateway is up, wait for Quartz or manually invoke:
+   ```bash
+   curl -X POST https://api.sincronizamei.com.br/admin/jobs/reconciliacao/trigger \
+     -H "Authorization: Bearer $ADMIN_TOKEN" -H "X-Idempotency-Key: $(uuidgen)"
+   ```
+
+#### **Runbook B: RabbitMQ DLQ Replay**
+1. **Inspect DLQ payload safely without ack:**
+   ```bash
+   curl -s -u $RABBIT_USER:$RABBIT_PASS \
+     -X POST "http://rabbit.sincronizamei.com.br:15672/api/queues/%2F/financeiro.reconciliacao.dlq/get" \
+     -H "Content-Type: application/json" \
+     -d '{"count": 5, "ackmode": "ack_requeue_true", "encoding": "auto"}' \
+     | jq '.[].payload | fromjson'
+   ```
+2. **Filter and reprocess:**
+   ```bash
+   curl -X POST https://api.sincronizamei.com.br/admin/dlq/replay \
+     -H "Authorization: Bearer $ADMIN_TOKEN" \
+     -H "X-Idempotency-Key: $(uuidgen)" \
+     -d '{"queue":"financeiro.reconciliacao.dlq","filter":{"erroTipo":"GatewayTimeoutException"},"targetQueue":"financeiro.reconciliacao","maxMessages":50,"dryRun":false}'
+   ```
+
+#### **Runbook C: Hotfix for SQL Functions without Downtime**
+1. **Modify procedure definition:** Edit `db/procedures/sp_reconciliar_ordem.sql` with `CREATE OR REPLACE PROCEDURE`.
+2. **Run migration script without restart:**
+   ```bash
+   PGPASSWORD=$PROD_DB_PASS psql -h prod-db.sincronizamei.com.br -U sincronizamei_app -d sincronizamei -f db/procedures/sp_reconciliar_ordem.sql
+   ```
+
+---
+
 ## **🛡️ 15. Resilience & Disaster Recovery Plan (DRP)**
 
 ### **✍️ Resilience Rules Configurator Form**
@@ -474,6 +744,25 @@ SincronizaMEI/
 ---
 
 ## **🤝 16. System Service Integration Contracts**
+
+### **16.1. Custom Plugin Extensibility Specification**
+
+```typescript
+export interface Hook<T extends DomainEvent> {
+  readonly name: string;
+  readonly version: string;
+  execute(event: T): Promise<void>;
+  onError(error: HookError): Promise<void>;
+  onTimeout(): Promise<void>;
+}
+```
+
+| Customization Layer | Mechanism | Scope / Target | Risk Profile |
+| :--- | :--- | :--- | :--- |
+| **Domain Hook** | `HookRegistry` + `Hook<T>` | Outbound notifications, NF-e emission | Minimal (Async Sandbox Thread) |
+| **Custom Stored Procedure** | SQL callbacks in `db/procedures/custom/` | Specific taxation rules | Low (No direct core write permission) |
+
+---
 
 All outbound audit and change events must conform to the following contract structure:
 

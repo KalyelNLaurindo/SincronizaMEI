@@ -22,3 +22,7 @@ Você pode rodar `docker-compose ps` para verificar se todos os containers inici
 - **RabbitMQ (AMQP):** `5672`
 - **RabbitMQ (UI):** `15672` (Acesso via navegador web)
 - **Vault:** `8200`
+
+---
+
+👉 *Para obter detalhes arquiteturais, diagramas físicos/lógicos e especificações detalhadas do banco de dados, consulte o [Software Design Document](./context/Software%20Design%20Document%20-%20SincronizaMEI.md).*
