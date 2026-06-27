@@ -2,6 +2,18 @@
 
 **Role:** Kalyel N. Laurindo / Software Engineer  
 
+![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk)
+![React](https://img.shields.io/badge/React-18-blue?logo=react)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue?logo=postgresql)
+![Redis](https://img.shields.io/badge/Redis-7.2-red?logo=redis)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-3.13-orange?logo=rabbitmq)
+![Docker](https://img.shields.io/badge/Docker-ready-blue?logo=docker)
+![AWS](https://img.shields.io/badge/AWS-Fargate-FF9900?logo=amazonaws)
+![Terraform](https://img.shields.io/badge/Terraform-ready-7B42BC?logo=terraform)
+![Vault](https://img.shields.io/badge/HashiCorp_Vault-ready-000000?logo=vault)
+![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-ready-F15A24?logo=opentelemetry)
+![LGPD](https://img.shields.io/badge/LGPD-Compliant-blueviolet)
+
 **Objective:** Detail the technical implementation, architectural patterns, frameworks, and deployment topologies required to execute the business vision.
 
 **Context:** SincronizaMEI is a modular monolithic ERP designed to enforce core business rules through Project Loom Virtual Threads, Bitemporal PostgreSQL persistence, and Redis-backed HTTP idempotency.
@@ -27,12 +39,12 @@
 
 | Layer & ID | Technology / Framework | Technical Rationale & Architectural Decisions |
 | :--- | :--- | :--- |
-| **Field 1.1.1 - Frontend / Client Stack** | React 18 / TypeScript / Vite / Tailwind CSS | Single Page Application (SPA) compiled as a Progressive Web App (PWA) to ensure offline-first support, high performance (TTI &le; 2.5s on 3G), and a responsive dual-UX dashboard tailored for both MEI (invoicing) and Auditor/Controller profiles. |
-| **Field 1.1.2 - Backend Core Stack** | Java 21 / Spring Boot 3.2.x | Powered by Java 21 Virtual Threads (Project Loom) to run thousands of concurrent, I/O-bound database queries and gateway reconciliation tasks on lightweight virtual threads without OS thread exhaustion. Uses ArchUnit for architecture enforcement. |
-| **Field 1.1.3 - Database & Storage Engines** | PostgreSQL 16 (Primary) / Redis 7.2 (Idempotency & Cache) | PostgreSQL 16 provides ACID guarantees, temporal range types (`TSTZRANGE`), partial indexes, and stored procedures for transaction logic. Redis 7.2 ensures low-latency atomic operations (`SET NX EX`) for HTTP request idempotency. |
-| **Field 1.1.4 - Message Brokers & Queue Managers** | RabbitMQ 3.13 | Decouples synchronous API responses (HTTP 202 Accepted) from asynchronous payment processing and reconciliation queues. Manages retry flows via exponential backoff and isolates failed events using Dead Letter Exchanges (DLX). |
-| **Field 1.1.5 - Gateway, Infrastructure & Orchestration** | Docker / AWS ECS Fargate / AWS ALB / HashiCorp Vault / Terraform | Standard containerized environments orchestrated via AWS ECS Fargate with AWS ALB routing. HashiCorp Vault handles dynamic and static secrets (API keys, DB passwords). Infrastructure-as-code is declared via Terraform. |
-| **Field 1.1.6 - Observability & Telemetry** | OpenTelemetry / Prometheus / Grafana / Jaeger | Implements distributed tracing and metrics aggregation across all layers. Logs are decorated with `traceId` and `correlationId` using MDC to allow quick diagnostics and prevent transaction drift. |
+| **Field 1.1.1 - Frontend / Client Stack** | ![React](https://img.shields.io/badge/React-18-blue?logo=react) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript) ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?logo=tailwindcss) | Single Page Application (SPA) compiled as a Progressive Web App (PWA) to ensure offline-first support, high performance (TTI &le; 2.5s on 3G), and a responsive dual-UX dashboard tailored for both MEI (invoicing) and Auditor/Controller profiles. |
+| **Field 1.1.2 - Backend Core Stack** | ![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk) ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2.x-6DB33F?logo=springboot) | Powered by Java 21 Virtual Threads (Project Loom) to run thousands of concurrent, I/O-bound database queries and gateway reconciliation tasks on lightweight virtual threads without OS thread exhaustion. Uses ArchUnit for architecture enforcement. |
+| **Field 1.1.3 - Database & Storage Engines** | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql) ![Redis](https://img.shields.io/badge/Redis-7.2-DC382D?logo=redis) | PostgreSQL 16 provides ACID guarantees, temporal range types (`TSTZRANGE`), partial indexes, and stored procedures for transaction logic. Redis 7.2 ensures low-latency atomic operations (`SET NX EX`) for HTTP request idempotency. |
+| **Field 1.1.4 - Message Brokers & Queue Managers** | ![RabbitMQ](https://img.shields.io/badge/RabbitMQ-3.13-FF6600?logo=rabbitmq) | Decouples synchronous API responses (HTTP 202 Accepted) from asynchronous payment processing and reconciliation queues. Manages retry flows via exponential backoff and isolates failed events using Dead Letter Exchanges (DLX). |
+| **Field 1.1.5 - Gateway, Infrastructure & Orchestration** | ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker) ![AWS](https://img.shields.io/badge/AWS-Fargate-FF9900?logo=amazonaws) ![Vault](https://img.shields.io/badge/Vault-ready-000000?logo=vault) ![Terraform](https://img.shields.io/badge/Terraform-ready-7B42BC?logo=terraform) | Standard containerized environments orchestrated via AWS ECS Fargate with AWS ALB routing. HashiCorp Vault handles dynamic and static secrets (API keys, DB passwords). Infrastructure-as-code is declared via Terraform. |
+| **Field 1.1.6 - Observability & Telemetry** | ![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-ready-F15A24?logo=opentelemetry) ![Prometheus](https://img.shields.io/badge/Prometheus-ready-E6522C?logo=prometheus) ![Grafana](https://img.shields.io/badge/Grafana-ready-F46800?logo=grafana) | Implements distributed tracing and metrics aggregation across all layers. Logs are decorated with `traceId` and `correlationId` using MDC to allow quick diagnostics and prevent transaction drift. |
 
 ---
 
